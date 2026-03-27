@@ -23,7 +23,7 @@
                     <li class="nav-item"><a class="nav-link" href="{{ route('admin.films.index') }}">Films</a></li>
                     <li class="nav-item"><a class="nav-link" href="{{ route('admin.acteurs.index') }}">Acteurs</a></li>
                     <li class="nav-item"><a class="nav-link" href="{{ route('admin.realisateurs.index') }}">Réalisateurs</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ route('admin.projections') }}">Projections</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ route('admin.projections.index') }}">Projections</a></li>
                     <li class="nav-item"><a class="nav-link" href="{{ route('admin.actualites') }}">Actualités</a></li>
                     <li class="nav-item"><a class="nav-link" href="{{ route('admin.galerie') }}">Galerie</a></li>
                     @guest
@@ -47,5 +47,6 @@
         @yield('content')
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    @stack('scripts')
 </body>
 </html>
