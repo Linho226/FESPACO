@@ -1,0 +1,72 @@
+# FESPACO - Project Requirements (Laravel)
+# NOTE:
+# This project is PHP/Laravel (not Python), so dependencies are managed by
+# composer.json/composer.lock and package.json/package-lock.json.
+# This file is provided as a quick onboarding checklist for collaborators.
+
+[System prerequisites]
+- PHP >= 8.2
+- Composer >= 2.x
+- Node.js >= 20.19 (recommended) + npm
+- SQLite (or MySQL/PostgreSQL if configured in .env)
+
+[PHP extensions commonly required by Laravel]
+- OpenSSL
+- PDO
+- Mbstring
+- Tokenizer
+- XML
+- Ctype
+- JSON
+- BCMath
+- Fileinfo
+
+[Backend dependencies (composer)]
+- laravel/framework:^12.0
+- laravel/breeze:^2.4
+- laravel/tinker:^2.10.1
+
+[Backend dev dependencies]
+- fakerphp/faker:^1.23
+- laravel/pail:^1.2.2
+- laravel/pint:^1.24
+- laravel/sail:^1.41
+- mockery/mockery:^1.6
+- nunomaduro/collision:^8.6
+- pestphp/pest:^3.8
+- pestphp/pest-plugin-laravel:^3.2
+
+[Frontend dependencies (npm devDependencies)]
+- vite:^7.0.7
+- laravel-vite-plugin:^2.0.0
+- tailwindcss:^3.1.0
+- @tailwindcss/vite:^4.0.0
+- @tailwindcss/forms:^0.5.2
+- postcss:^8.4.31
+- autoprefixer:^10.4.2
+- alpinejs:^3.4.2
+- axios:^1.11.0
+- concurrently:^9.0.1
+
+[Quick setup]
+1) Clone repo
+2) Install PHP deps:
+   composer install
+3) Install JS deps:
+   npm install
+4) Create env file:
+   cp .env.example .env
+5) Generate app key:
+   php artisan key:generate
+6) Run migrations:
+   php artisan migrate
+7) Build assets:
+   npm run build
+
+[Development]
+- Start full dev stack (server + queue + logs + vite):
+  composer run dev
+
+[Lock files to commit]
+- composer.lock
+- package-lock.json
