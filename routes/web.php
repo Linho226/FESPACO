@@ -3,11 +3,13 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PublicController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\GalerieController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\FilmController;
 use App\Http\Controllers\RealisateurController;
 use App\Http\Controllers\ActeurController;
 use App\Http\Controllers\ProjectionController;
+use App\Http\Controllers\ActualiteController;
 
 // --- Routes publiques ---
 Route::get('/', [PublicController::class, 'home'])->name('public.home');
@@ -16,7 +18,9 @@ Route::get('/realisateurs-acteurs', [PublicController::class, 'realisateursActeu
 Route::get('/projections', [PublicController::class, 'projections'])->name('public.projections');
 Route::get('/projections/{projection}/visionner', [PublicController::class, 'visionner'])->name('public.projections.visionner');
 Route::get('/actualites', [PublicController::class, 'actualites'])->name('public.actualites');
-Route::get('/galerie', [PublicController::class, 'galerie'])->name('public.galerie');
+Route::get('/actualites/{actualite}', [PublicController::class, 'actualite'])->name('public.actualites.show');
+Route::get('/galerie', [GalerieController::class, 'publicIndex'])->name('galerie.index');
+Route::get('/galerie/{galerie}', [GalerieController::class, 'show'])->name('galerie.show');
 Route::get('/a-propos', [PublicController::class, 'aPropos'])->name('public.a_propos');
 Route::get('/contact', [PublicController::class, 'contact'])->name('public.contact');
 
@@ -27,12 +31,13 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     })->name('dashboard');
 
     Route::get('/actualites', [AdminController::class, 'actualites'])->name('actualites');
-    Route::get('/galerie', [AdminController::class, 'galerie'])->name('galerie');
+    Route::resource('galeries', GalerieController::class)->except(['show']);
 
     Route::resource('films', FilmController::class);
     Route::resource('realisateurs', RealisateurController::class);
     Route::resource('acteurs', ActeurController::class);
     Route::resource('projections', ProjectionController::class);
+    Route::resource('actualites', ActualiteController::class);
     Route::post('projections/{projection}/demarrer', [ProjectionController::class, 'demarrer'])->name('projections.demarrer');
     Route::post('projections/{projection}/arreter',  [ProjectionController::class, 'arreter'])->name('projections.arreter');
 });

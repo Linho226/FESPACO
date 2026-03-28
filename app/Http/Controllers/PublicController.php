@@ -145,7 +145,14 @@ class PublicController extends Controller
 
     public function actualites()
     {
-        return view('public.actualites');
+        $actualites = \App\Models\Actualite::with('auteur')->orderByDesc('date_publication')->paginate(10);
+        return view('public.actualites', compact('actualites'));
+    }
+
+        public function actualite(\App\Models\Actualite $actualite)
+    {
+        $actualite->load('auteur');
+        return view('public.actualite', compact('actualite'));
     }
 
     public function galerie()

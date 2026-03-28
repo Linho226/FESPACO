@@ -24,8 +24,8 @@
                     <li class="nav-item"><a class="nav-link" href="{{ route('admin.acteurs.index') }}">Acteurs</a></li>
                     <li class="nav-item"><a class="nav-link" href="{{ route('admin.realisateurs.index') }}">Réalisateurs</a></li>
                     <li class="nav-item"><a class="nav-link" href="{{ route('admin.projections.index') }}">Projections</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ route('admin.actualites') }}">Actualités</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ route('admin.galerie') }}">Galerie</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ route('admin.actualites.index') }}">Actualités</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ route('admin.galeries.index') }}">Galerie</a></li>
                     @guest
                         <li class="nav-item ms-2">
                             <a href="{{ route('login') }}" class="btn btn-outline-light btn-sm mt-1">Connexion</a>

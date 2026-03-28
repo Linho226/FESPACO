@@ -116,7 +116,7 @@
                     <div class="card-body text-center">
                         <h5 class="card-title text-primary">Projections</h5>
                         <p class="card-text">Planifiez et modifiez les projections de films.</p>
-                        <a href="{{ route('admin.projections') }}" class="btn btn-primary">Gérer les projections</a>
+                        <a href="{{ route('admin.projections.index') }}" class="btn btn-primary">Gérer les projections</a>
                     </div>
                 </div>
             </div>
