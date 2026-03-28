@@ -4,42 +4,42 @@ namespace App\Http\Controllers;
 
 use App\Models\Acteur;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ActeurController extends Controller
 {
-    // Afficher tous les acteurs
-    public function index()
+    public function index(Request $request)
     {
-        $acteurs = Acteur::all();
+        $query = Acteur::query();
+
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($builder) use ($search) {
+                $builder->where('nom', 'like', "%{$search}%")
+                    ->orWhere('prenom', 'like', "%{$search}%")
+                    ->orWhere('nationalite', 'like', "%{$search}%")
+                    ->orWhere('type', 'like', "%{$search}%");
+            });
+        }
+
+        $acteurs = $query->orderBy('nom')->orderBy('prenom')->paginate(12)->withQueryString();
+
         return view('admin.acteurs.index', compact('acteurs'));
     }
 
-    // Afficher un acteur spécifique
-    public function show($id)
+    public function show(Acteur $acteur)
     {
-        $acteur = Acteur::findOrFail($id);
         return view('admin.acteurs.show', compact('acteur'));
     }
 
-    // Afficher le formulaire de création
     public function create()
     {
         return view('admin.acteurs.create');
     }
 
-    // Enregistrer un nouvel acteur
     public function store(Request $request)
     {
-        $request->validate([
-            'nom' => 'required|string|max:255',
-            'prenom' => 'required|string|max:255',
-            'nationalite' => 'nullable|string|max:255',
-            'biographie' => 'nullable|string',
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'type' => 'nullable|string|max:255',
-        ]);
-
-        $data = $request->all();
+        $data = $request->validate($this->rules(), $this->messages());
 
         if ($request->hasFile('photo')) {
             $data['photo'] = $request->file('photo')->store('acteurs', 'public');
@@ -50,29 +50,20 @@ class ActeurController extends Controller
         return redirect()->route('admin.acteurs.index')->with('success', 'Acteur ajouté avec succès.');
     }
 
-    // Afficher le formulaire d'édition
-    public function edit($id)
+    public function edit(Acteur $acteur)
     {
-        $acteur = Acteur::findOrFail($id);
         return view('admin.acteurs.edit', compact('acteur'));
     }
 
-    // Mettre à jour un acteur
-    public function update(Request $request, $id)
+    public function update(Request $request, Acteur $acteur)
     {
-        $acteur = Acteur::findOrFail($id);
-        $request->validate([
-            'nom' => 'sometimes|required|string|max:255',
-            'prenom' => 'sometimes|required|string|max:255',
-            'nationalite' => 'sometimes|nullable|string|max:255',
-            'biographie' => 'sometimes|nullable|string',
-            'photo' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'type' => 'sometimes|nullable|string|max:255',
-        ]);
-
-        $data = $request->all();
+        $data = $request->validate($this->rules(), $this->messages());
 
         if ($request->hasFile('photo')) {
+            if ($acteur->photo && Storage::disk('public')->exists($acteur->photo)) {
+                Storage::disk('public')->delete($acteur->photo);
+            }
+
             $data['photo'] = $request->file('photo')->store('acteurs', 'public');
         }
 
@@ -81,21 +72,37 @@ class ActeurController extends Controller
         return redirect()->route('admin.acteurs.index')->with('success', 'Acteur mis à jour avec succès.');
     }
 
-    // Supprimer un acteur
-    public function destroy($id)
+    public function destroy(Acteur $acteur)
     {
-        $acteur = Acteur::findOrFail($id);
+        if ($acteur->photo && Storage::disk('public')->exists($acteur->photo)) {
+            Storage::disk('public')->delete($acteur->photo);
+        }
+
         $acteur->delete();
+
         return redirect()->route('admin.acteurs.index')->with('success', 'Acteur supprimé avec succès.');
     }
 
-    // Méthode de recherche (optionnelle)
-    public function search(Request $request)
+    private function rules(): array
     {
-        $query = $request->input('q');
-        $result = Acteur::where('nom', 'like', "%$query%")
-            ->orWhere('prenom', 'like', "%$query%")
-            ->get();
-        return view('admin.acteurs.index', ['acteurs' => $result]);
+        return [
+            'nom' => 'required|string|max:255',
+            'prenom' => 'required|string|max:255',
+            'nationalite' => 'nullable|string|max:255',
+            'biographie' => 'nullable|string|max:5000',
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:3072',
+            'type' => 'nullable|string|max:255',
+        ];
+    }
+
+    private function messages(): array
+    {
+        return [
+            'nom.required' => 'Le nom est obligatoire.',
+            'prenom.required' => 'Le prénom est obligatoire.',
+            'photo.image' => 'Le fichier photo doit être une image valide.',
+            'photo.mimes' => 'Formats acceptés: jpeg, png, jpg, webp.',
+            'photo.max' => 'La photo ne doit pas dépasser 3 Mo.',
+        ];
     }
 }

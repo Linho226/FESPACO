@@ -15,8 +15,11 @@ use App\Http\Controllers\ActualiteController;
 Route::get('/', [PublicController::class, 'home'])->name('public.home');
 Route::get('/films', [PublicController::class, 'films'])->name('public.films');
 Route::get('/realisateurs-acteurs', [PublicController::class, 'realisateursActeurs'])->name('public.realisateurs_acteurs');
+Route::get('/realisateurs/{realisateur}', [PublicController::class, 'realisateur'])->name('public.realisateurs.show');
+Route::get('/acteurs/{acteur}', [PublicController::class, 'acteur'])->name('public.acteurs.show');
 Route::get('/projections', [PublicController::class, 'projections'])->name('public.projections');
 Route::get('/projections/{projection}/visionner', [PublicController::class, 'visionner'])->name('public.projections.visionner');
+Route::get('/projections/{projection}/etat', [PublicController::class, 'projectionStatus'])->name('public.projections.status');
 Route::get('/actualites', [PublicController::class, 'actualites'])->name('public.actualites');
 Route::get('/actualites/{actualite}', [PublicController::class, 'actualite'])->name('public.actualites.show');
 Route::get('/galerie', [GalerieController::class, 'publicIndex'])->name('galerie.index');
@@ -31,7 +34,10 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     })->name('dashboard');
 
     Route::get('/actualites', [AdminController::class, 'actualites'])->name('actualites');
-    Route::resource('galeries', GalerieController::class)->except(['show']);
+    Route::resource('galeries', GalerieController::class)
+        ->parameters(['galeries' => 'galerie'])
+        ->except(['show']);
+    Route::get('galeries/{galerie}/lecture', [GalerieController::class, 'play'])->name('galeries.play');
 
     Route::resource('films', FilmController::class);
     Route::resource('realisateurs', RealisateurController::class);

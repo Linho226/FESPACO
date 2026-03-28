@@ -1,71 +1,72 @@
 @extends('admin.layout')
 
+@section('title', 'Modifier un réalisateur')
+
 @section('content')
-<h1>Modifier le Réalisateur</h1>
+<div class="container" style="max-width: 760px;">
+    <h2 class="mb-4">Modifier le réalisateur</h2>
 
-@if ($errors->any())
-    <div style="color: red;">
-        <ul>
-            @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-@endif
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
-<style>
-    form {
-        display: flex;
-        flex-direction: column;
-        max-width: 400px;
-        margin: 0 auto;
-    }
-    input, textarea, button {
-        margin-bottom: 15px;
-        padding: 8px;
-        font-size: 1rem;
-    }
-    button {
-        background: #007bff;
-        color: #fff;
-        border: none;
-        cursor: pointer;
-        border-radius: 4px;
-    }
-    button:hover {
-        background: #0056b3;
-    }
-    .current-photo {
-        margin-bottom: 15px;
-        text-align: center;
-    }
-    .current-photo img {
-        max-width: 150px;
-        border-radius: 8px;
-        margin-bottom: 5px;
-    }
-</style>
+    <form action="{{ route('admin.realisateurs.update', $realisateur) }}" method="POST" enctype="multipart/form-data" class="card shadow-sm">
+        @csrf
+        @method('PUT')
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="prenom" class="form-label fw-bold">Prénom <span class="text-danger">*</span></label>
+                    <input type="text" id="prenom" name="prenom" class="form-control @error('prenom') is-invalid @enderror"
+                           value="{{ old('prenom', $realisateur->prenom) }}" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="nom" class="form-label fw-bold">Nom <span class="text-danger">*</span></label>
+                    <input type="text" id="nom" name="nom" class="form-control @error('nom') is-invalid @enderror"
+                           value="{{ old('nom', $realisateur->nom) }}" required>
+                </div>
+            </div>
 
-<form action="{{ route('admin.realisateurs.update', $realisateur) }}" method="POST" enctype="multipart/form-data">
-    @csrf
-    @method('PUT')
-    <input type="text" name="prenom" value="{{ old('prenom', $realisateur->prenom) }}" required>
-    <input type="text" name="nom" value="{{ old('nom', $realisateur->nom) }}" required>
-    <input type="text" name="nationalite" value="{{ old('nationalite', $realisateur->nationalite) }}">
-    
-    <div class="current-photo">
-        @if($realisateur->photo)
-            <img src="{{ asset('storage/'.$realisateur->photo) }}" alt="Photo actuelle">
-            <div>Photo actuelle</div>
-        @else
-            <div>Aucune photo</div>
-        @endif
-    </div>
-    <input type="file" name="photo">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="nationalite" class="form-label fw-bold">Nationalité</label>
+                    <input type="text" id="nationalite" name="nationalite" class="form-control"
+                           value="{{ old('nationalite', $realisateur->nationalite) }}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="type" class="form-label fw-bold">Type</label>
+                    <input type="text" id="type" name="type" class="form-control"
+                           value="{{ old('type', $realisateur->type) }}">
+                </div>
+            </div>
 
-    <input type="text" name="type" value="{{ old('type', $realisateur->type) }}">
-    <textarea name="biographie" placeholder="Biographie">{{ old('biographie', $realisateur->biographie) }}</textarea>
-    <button type="submit">Modifier</button>
-    <a href="{{ route('admin.realisateurs.index') }}">Annuler</a>
-</form>
+            <div class="mb-3">
+                <label for="photo" class="form-label fw-bold">Photo</label>
+                @if($realisateur->photo)
+                    <div class="mb-2">
+                        <img src="{{ asset('storage/'.$realisateur->photo) }}" alt="Photo actuelle"
+                             class="img-thumbnail" style="width:120px;height:120px;object-fit:cover;">
+                    </div>
+                @endif
+                <input type="file" id="photo" name="photo" class="form-control @error('photo') is-invalid @enderror" accept="image/*">
+                <small class="text-muted">Laisser vide pour conserver la photo actuelle.</small>
+            </div>
+
+            <div class="mb-3">
+                <label for="biographie" class="form-label fw-bold">Biographie</label>
+                <textarea id="biographie" name="biographie" rows="5" class="form-control">{{ old('biographie', $realisateur->biographie) }}</textarea>
+            </div>
+        </div>
+        <div class="card-footer d-flex gap-2">
+            <button type="submit" class="btn btn-warning">Enregistrer</button>
+            <a href="{{ route('admin.realisateurs.index') }}" class="btn btn-secondary">Annuler</a>
+        </div>
+    </form>
+</div>
 @endsection

@@ -4,42 +4,42 @@ namespace App\Http\Controllers;
 
 use App\Models\Realisateur;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class RealisateurController extends Controller
 {
-    // Afficher tous les réalisateurs
-    public function index()
+    public function index(Request $request)
     {
-        $realisateurs = Realisateur::all();
+        $query = Realisateur::query();
+
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($builder) use ($search) {
+                $builder->where('nom', 'like', "%{$search}%")
+                    ->orWhere('prenom', 'like', "%{$search}%")
+                    ->orWhere('nationalite', 'like', "%{$search}%")
+                    ->orWhere('type', 'like', "%{$search}%");
+            });
+        }
+
+        $realisateurs = $query->orderBy('nom')->orderBy('prenom')->paginate(12)->withQueryString();
+
         return view('admin.Realisateurs.index', compact('realisateurs'));
     }
 
-    // Afficher un réalisateur spécifique
-    public function show($id)
+    public function show(Realisateur $realisateur)
     {
-        $realisateur = Realisateur::findOrFail($id);
         return view('admin.Realisateurs.show', compact('realisateur'));
     }
 
-    // Afficher le formulaire de création
     public function create()
     {
         return view('admin.Realisateurs.create');
     }
 
-    // Enregistrer un nouveau réalisateur
     public function store(Request $request)
     {
-        $request->validate([
-            'nom' => 'required|string|max:255',
-            'prenom' => 'required|string|max:255',
-            'nationalite' => 'nullable|string|max:255',
-            'biographie' => 'nullable|string',
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'type' => 'nullable|string|max:255',
-        ]);
-
-        $data = $request->all();
+        $data = $request->validate($this->rules(), $this->messages());
 
         if ($request->hasFile('photo')) {
             $data['photo'] = $request->file('photo')->store('realisateurs', 'public');
@@ -50,29 +50,20 @@ class RealisateurController extends Controller
         return redirect()->route('admin.realisateurs.index')->with('success', 'Réalisateur ajouté avec succès.');
     }
 
-    // Afficher le formulaire d'édition
-    public function edit($id)
+    public function edit(Realisateur $realisateur)
     {
-        $realisateur = Realisateur::findOrFail($id);
         return view('admin.Realisateurs.edit', compact('realisateur'));
     }
 
-    // Mettre à jour un réalisateur
-    public function update(Request $request, $id)
+    public function update(Request $request, Realisateur $realisateur)
     {
-        $realisateur = Realisateur::findOrFail($id);
-        $request->validate([
-            'nom' => 'sometimes|required|string|max:255',
-            'prenom' => 'sometimes|required|string|max:255',
-            'nationalite' => 'sometimes|nullable|string|max:255',
-            'biographie' => 'sometimes|nullable|string',
-            'photo' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'type' => 'sometimes|nullable|string|max:255',
-        ]);
-
-        $data = $request->all();
+        $data = $request->validate($this->rules(), $this->messages());
 
         if ($request->hasFile('photo')) {
+            if ($realisateur->photo && Storage::disk('public')->exists($realisateur->photo)) {
+                Storage::disk('public')->delete($realisateur->photo);
+            }
+
             $data['photo'] = $request->file('photo')->store('realisateurs', 'public');
         }
 
@@ -81,21 +72,37 @@ class RealisateurController extends Controller
         return redirect()->route('admin.realisateurs.index')->with('success', 'Réalisateur mis à jour avec succès.');
     }
 
-    // Supprimer un réalisateur
-    public function destroy($id)
+    public function destroy(Realisateur $realisateur)
     {
-        $realisateur = Realisateur::findOrFail($id);
+        if ($realisateur->photo && Storage::disk('public')->exists($realisateur->photo)) {
+            Storage::disk('public')->delete($realisateur->photo);
+        }
+
         $realisateur->delete();
+
         return redirect()->route('admin.realisateurs.index')->with('success', 'Réalisateur supprimé avec succès.');
     }
 
-    // Recherche de réalisateurs
-    public function search(Request $request)
+    private function rules(): array
     {
-        $query = $request->input('q');
-        $result = Realisateur::where('nom', 'like', "%$query%")
-            ->orWhere('prenom', 'like', "%$query%")
-            ->get();
-        return view('admin.Realisateurs.index', ['realisateurs' => $result]);
+        return [
+            'nom' => 'required|string|max:255',
+            'prenom' => 'required|string|max:255',
+            'nationalite' => 'nullable|string|max:255',
+            'biographie' => 'nullable|string|max:5000',
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:3072',
+            'type' => 'nullable|string|max:255',
+        ];
+    }
+
+    private function messages(): array
+    {
+        return [
+            'nom.required' => 'Le nom est obligatoire.',
+            'prenom.required' => 'Le prénom est obligatoire.',
+            'photo.image' => 'Le fichier photo doit être une image valide.',
+            'photo.mimes' => 'Formats acceptés: jpeg, png, jpg, webp.',
+            'photo.max' => 'La photo ne doit pas dépasser 3 Mo.',
+        ];
     }
 }

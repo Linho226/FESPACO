@@ -20,6 +20,7 @@ class Film extends Model
         'categorie',
         'type',
         'video',
+        'video_link',
         'video_links',
         'video_files',
     ];
@@ -27,5 +28,10 @@ class Film extends Model
     public function projections(): HasMany
     {
         return $this->hasMany(Projection::class);
+    }
+
+    public function galeries(): HasMany
+    {
+        return $this->hasMany(Galerie::class);
     }
 }

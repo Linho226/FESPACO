@@ -25,16 +25,124 @@ class PublicController extends Controller
         return view('public.films', compact('films')); // envoie à la vue
     }
 
-    public function realisateursActeurs()
+    public function realisateursActeurs(Request $request)
     {
-        $realisateurs = Realisateur::all();
-        $acteurs = Acteur::all();
-        return view('public.realisateurs-acteurs', compact('realisateurs', 'acteurs'));
+        $search = trim((string) $request->input('q', ''));
+        $nationalite = trim((string) $request->input('nationalite', ''));
+        $type = trim((string) $request->input('type', ''));
+        $profil = $request->input('profil', 'tous');
+
+        $showRealisateurs = in_array($profil, ['tous', 'realisateurs'], true);
+        $showActeurs = in_array($profil, ['tous', 'acteurs'], true);
+
+        $realisateursQuery = Realisateur::query()->orderBy('nom')->orderBy('prenom');
+        $acteursQuery = Acteur::query()->orderBy('nom')->orderBy('prenom');
+
+        if ($search !== '') {
+            $realisateursQuery->where(function ($query) use ($search) {
+                $query->where('nom', 'like', "%{$search}%")
+                    ->orWhere('prenom', 'like', "%{$search}%")
+                    ->orWhere('nationalite', 'like', "%{$search}%")
+                    ->orWhere('type', 'like', "%{$search}%");
+            });
+
+            $acteursQuery->where(function ($query) use ($search) {
+                $query->where('nom', 'like', "%{$search}%")
+                    ->orWhere('prenom', 'like', "%{$search}%")
+                    ->orWhere('nationalite', 'like', "%{$search}%")
+                    ->orWhere('type', 'like', "%{$search}%");
+            });
+        }
+
+        if ($nationalite !== '') {
+            $realisateursQuery->where('nationalite', $nationalite);
+            $acteursQuery->where('nationalite', $nationalite);
+        }
+
+        if ($type !== '') {
+            $realisateursQuery->where('type', $type);
+            $acteursQuery->where('type', $type);
+        }
+
+        if (!$showRealisateurs) {
+            $realisateursQuery->whereRaw('1 = 0');
+        }
+
+        if (!$showActeurs) {
+            $acteursQuery->whereRaw('1 = 0');
+        }
+
+        $nationalites = Realisateur::query()
+            ->select('nationalite')
+            ->whereNotNull('nationalite')
+            ->where('nationalite', '!=', '')
+            ->pluck('nationalite')
+            ->merge(
+                Acteur::query()
+                    ->select('nationalite')
+                    ->whereNotNull('nationalite')
+                    ->where('nationalite', '!=', '')
+                    ->pluck('nationalite')
+            )
+            ->unique()
+            ->sort()
+            ->values();
+
+        $types = Realisateur::query()
+            ->select('type')
+            ->whereNotNull('type')
+            ->where('type', '!=', '')
+            ->pluck('type')
+            ->merge(
+                Acteur::query()
+                    ->select('type')
+                    ->whereNotNull('type')
+                    ->where('type', '!=', '')
+                    ->pluck('type')
+            )
+            ->unique()
+            ->sort()
+            ->values();
+
+        $realisateurs = $realisateursQuery->paginate(8, ['*'], 'page_realisateurs')->withQueryString();
+        $acteurs = $acteursQuery->paginate(8, ['*'], 'page_acteurs')->withQueryString();
+
+        return view('public.realisateurs-acteurs', compact(
+            'realisateurs',
+            'acteurs',
+            'search',
+            'nationalite',
+            'type',
+            'profil',
+            'nationalites',
+            'types',
+            'showRealisateurs',
+            'showActeurs'
+        ));
+    }
+
+    public function realisateur(Realisateur $realisateur)
+    {
+        return view('public.realisateur', compact('realisateur'));
+    }
+
+    public function acteur(Acteur $acteur)
+    {
+        return view('public.acteur', compact('acteur'));
     }
 
     public function projections(Request $request)
     {
-        $baseQuery = Projection::with('film')
+        $baseQuery = Projection::with(['film.galeries' => function ($query) {
+                $query->where('type_media', 'video')
+                    ->where(function ($q) {
+                        $q->whereNotNull('fichier')
+                            ->orWhere(function ($q2) {
+                                $q2->whereNotNull('lien')
+                                    ->where('lien', '!=', '');
+                            });
+                    });
+            }])
             ->where('publie', true)
             ->orderBy('date')
             ->orderBy('heure');
@@ -92,55 +200,137 @@ class PublicController extends Controller
         return view('public.projections', compact('projections', 'salles', 'etat', 'recommandees'));
     }
 
-    public function visionner(Projection $projection)
+    public function visionner(Request $request, Projection $projection)
     {
         if (!$projection->publie) {
             abort(404);
         }
 
-        $projection->load('film');
+        $projection->load('film.galeries');
         $film = $projection->film;
 
-        $now = Carbon::now();
-        $debutAutorise = $projection->dateHeure()->copy()->subMinutes(self::WATCH_WINDOW_BEFORE_MINUTES);
-        $finAutorisee = $projection->finPrevue()->copy()->addMinutes(self::WATCH_WINDOW_AFTER_MINUTES);
+        $watchState = $this->getProjectionWatchState($projection);
 
-        $accesAutorise = $projection->estEnCours() || $now->between($debutAutorise, $finAutorisee);
-
-        if (!$accesAutorise) {
-            return redirect()->route('public.projections')->with(
-                'warning',
-                "Le visionnage de « {$film->titre} » est disponible de "
-                .$debutAutorise->format('d/m/Y H\\hi')." à "
-                .$finAutorisee->format('d/m/Y H\\hi').'.'
-            );
+        if (!$watchState['can_watch']) {
+            return redirect()->route('public.projections')->with('warning', $watchState['message']);
         }
 
-        $videoUrl = null;
+        $playbackOffsetSeconds = max(0, (int) $projection->tempsEcouleSecondes());
 
-        if (!empty($film?->video)) {
-            $videoUrl = asset('storage/'.$film->video);
+        $medias = collect($film?->galeries ?? [])
+            ->filter(fn ($media) => $media->type_media === 'video')
+            ->sortByDesc(fn ($media) => $media->date?->timestamp ?? 0)
+            ->values()
+            ->map(function ($media) use ($playbackOffsetSeconds) {
+                $fichierUrl = $media->fichier ? asset('storage/'.$media->fichier) : null;
+                $embedUrl = $this->toEmbedUrl($media->lien, $playbackOffsetSeconds);
+
+                return [
+                    'id' => $media->id,
+                    'titre' => $media->titre,
+                    'description' => $media->description,
+                    'date' => $media->date,
+                    'kind' => 'video',
+                    'fichier_url' => $fichierUrl,
+                    'lien' => $media->lien,
+                    'embed_url' => $embedUrl,
+                    'has_video_source' => !empty($fichierUrl) || !empty($media->lien),
+                ];
+            })
+            ->filter(fn ($media) => $media['has_video_source'])
+            ->values();
+
+        $selectedMediaId = (int) $request->query('media');
+        $selectedMedia = $medias->firstWhere('id', $selectedMediaId);
+
+        $defaultMedia = $medias->first();
+
+        $activeMedia = $selectedMedia ?? $defaultMedia;
+
+        return view('public.visionnage', compact('projection', 'film', 'medias', 'activeMedia', 'playbackOffsetSeconds'));
+    }
+
+    public function projectionStatus(Projection $projection)
+    {
+        if (!$projection->publie) {
+            abort(404);
         }
 
-        if ($videoUrl === null && !empty($film?->video_files)) {
-            $files = is_array($film->video_files) ? $film->video_files : json_decode($film->video_files, true);
-            if (is_array($files) && !empty($files[0])) {
-                $videoUrl = asset('storage/'.$files[0]);
-            }
+        $state = $this->getProjectionWatchState($projection);
+        $etat = $projection->etat();
+        $pausedSince = $projection->estArreteeManuellement() && $projection->fin_at
+            ? $projection->fin_at->copy()
+            : null;
+
+        return response()->json([
+            'can_watch' => $state['can_watch'],
+            'message' => $state['message'],
+            'status' => $etat['label'],
+            'badge' => $etat['badge'],
+            'icon' => $etat['icon'],
+            'paused_since' => $pausedSince?->toIso8601String(),
+            'paused_elapsed_seconds' => $pausedSince ? $pausedSince->diffInSeconds(now()) : null,
+        ]);
+    }
+
+    private function toEmbedUrl(?string $url, int $startAtSeconds = 0): ?string
+    {
+        if (!$url) {
+            return null;
         }
 
-        if ($videoUrl === null && !empty($film?->video_link)) {
-            $videoUrl = $film->video_link;
+        $startAtSeconds = max(0, $startAtSeconds);
+        $youtubeStartParam = $startAtSeconds > 0 ? '&start='.$startAtSeconds : '';
+        $vimeoStartFragment = $startAtSeconds > 0 ? '#t='.$startAtSeconds.'s' : '';
+
+        if (preg_match('/youtube\.com\/watch\?v=([^&]+)/', $url, $matches)) {
+            return 'https://www.youtube.com/embed/' . $matches[1] . '?autoplay=1&mute=1&rel=0'.$youtubeStartParam;
         }
 
-        if ($videoUrl === null && !empty($film?->video_links)) {
-            $links = is_array($film->video_links) ? $film->video_links : json_decode($film->video_links, true);
-            if (is_array($links) && !empty($links[0])) {
-                $videoUrl = $links[0];
-            }
+        if (preg_match('/youtu\.be\/([^?&]+)/', $url, $matches)) {
+            return 'https://www.youtube.com/embed/' . $matches[1] . '?autoplay=1&mute=1&rel=0'.$youtubeStartParam;
         }
 
-        return view('public.visionnage', compact('projection', 'film', 'videoUrl'));
+        if (preg_match('/youtube\.com\/shorts\/([^?&]+)/', $url, $matches)) {
+            return 'https://www.youtube.com/embed/' . $matches[1] . '?autoplay=1&mute=1&rel=0'.$youtubeStartParam;
+        }
+
+        if (preg_match('/vimeo\.com\/(\d+)/', $url, $matches)) {
+            return 'https://player.vimeo.com/video/' . $matches[1] . '?autoplay=1&muted=1'.$vimeoStartFragment;
+        }
+
+        return null;
+    }
+
+    private function getProjectionWatchState(Projection $projection): array
+    {
+        $filmTitle = $projection->film?->titre ?? 'cette projection';
+
+        if ($projection->estEnCours()) {
+            return [
+                'can_watch' => true,
+                'message' => null,
+            ];
+        }
+
+        if ($projection->estArreteeManuellement()) {
+            return [
+                'can_watch' => false,
+                'message' => "La projection « {$filmTitle} » est actuellement en pause et reprendra dans quelques minutes.",
+            ];
+        }
+
+        if ($projection->estTerminee()) {
+            return [
+                'can_watch' => false,
+                'message' => "La projection « {$filmTitle} » est terminée. Merci d’avoir suivi cette séance.",
+            ];
+        }
+
+        return [
+            'can_watch' => false,
+            'message' => "La projection « {$filmTitle} » n’a pas encore commencé. Merci de patienter encore un moment.",
+        ];
     }
 
     public function actualites()

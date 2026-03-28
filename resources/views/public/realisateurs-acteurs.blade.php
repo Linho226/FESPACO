@@ -1,223 +1,128 @@
-@extends('admin.layout')
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Réalisateurs & Acteurs - FESPACO</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: #f4f6f9; }
+        .talent-card { border: none; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,.08); }
+        .avatar { width: 88px; height: 88px; object-fit: cover; border-radius: 50%; }
+    </style>
+</head>
+<body>
+@include('public.navbar')
 
-@section('content')
-<h1 style="text-align:center; margin-bottom: 0;">Réalisateurs & Acteurs</h1>
-<p style="text-align:center; margin-bottom: 30px;">Rencontrez les talents du cinéma africain présents au festival.</p>
-
-<style>
-    .tabs {
-        display: flex;
-        justify-content: center;
-        margin-bottom: 24px;
-        gap: 10px;
-    }
-    .tab-btn {
-        padding: 10px 28px;
-        border: none;
-        background: #e9ecef;
-        color: #222;
-        font-size: 1.1rem;
-        border-radius: 8px 8px 0 0;
-        cursor: pointer;
-        transition: background 0.2s;
-    }
-    .tab-btn.active {
-        background: #fff;
-        color: #007bff;
-        font-weight: bold;
-        border-bottom: 2px solid #007bff;
-    }
-    .tab-content {
-        display: none;
-        animation: fadeIn 0.4s;
-    }
-    .tab-content.active {
-        display: block;
-    }
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-    .search-bar {
-        display: flex;
-        justify-content: center;
-        margin-bottom: 18px;
-    }
-    .search-bar input {
-        width: 260px;
-        padding: 8px 12px;
-        border-radius: 6px;
-        border: 1px solid #ccc;
-        font-size: 1rem;
-    }
-    .talent-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 22px;
-        margin: 0 2vw;
-    }
-    .talent-card {
-        background: #fff;
-        border-radius: 16px;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.10);
-        padding: 18px 10px 14px 10px;
-        text-align: center;
-        transition: transform 0.18s, box-shadow 0.18s;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        min-height: 260px;
-        min-width: 0;
-        aspect-ratio: 1/1.1; /* carré ou presque */
-        justify-content: space-between;
-    }
-    .talent-card:hover {
-        transform: translateY(-4px) scale(1.03);
-        box-shadow: 0 6px 24px rgba(0,0,0,0.13);
-    }
-    .talent-photo {
-        width: 80px;
-        height: 80px;
-        object-fit: cover;
-        border-radius: 50%;
-        margin-bottom: 10px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.10);
-        border: 3px solid #f3f3f3;
-        background: #f8f8f8;
-    }
-    .talent-card h3 {
-        margin: 6px 0 2px 0;
-        font-size: 1.08rem;
-        font-weight: 600;
-        color: #222;
-    }
-    .talent-card p {
-        margin: 2px 0;
-        font-size: 0.97rem;
-        color: #444;
-    }
-    .talent-card .talent-type {
-        font-size: 0.95rem;
-        color: #007bff;
-        font-weight: 500;
-        margin-top: 4px;
-    }
-    .talent-card .details-btn {
-        margin-top: 10px;
-        background: #007bff;
-        color: #fff;
-        border: none;
-        border-radius: 4px;
-        padding: 7px 16px;
-        font-size: 0.97rem;
-        cursor: pointer;
-        text-decoration: none;
-        transition: background 0.2s;
-        display: inline-block;
-    }
-    .talent-card .details-btn:hover {
-        background: #0056b3;
-    }
-    @media (max-width: 1200px) {
-        .talent-grid {
-            grid-template-columns: repeat(3, 1fr);
-        }
-    }
-    @media (max-width: 900px) {
-        .talent-grid {
-            grid-template-columns: repeat(2, 1fr);
-        }
-    }
-    @media (max-width: 600px) {
-        .talent-grid {
-            grid-template-columns: 1fr;
-            margin: 0 4vw;
-            gap: 12px;
-        }
-        .talent-card {
-            min-height: 180px;
-            padding: 10px 2px 8px 2px;
-        }
-    }
-</style>
-
-<div class="tabs">
-    <button class="tab-btn active" onclick="showTab('realisateurs')">Réalisateurs</button>
-    <button class="tab-btn" onclick="showTab('acteurs')">Acteurs</button>
-</div>
-
-<div id="realisateurs" class="tab-content active">
-    <div class="search-bar">
-        <input type="text" id="searchRealisateurs" placeholder="Rechercher un réalisateur..." onkeyup="filterTalents('realisateurs')">
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <h1 class="mb-0">Réalisateurs & Acteurs</h1>
+        <span class="badge bg-dark">{{ $realisateurs->total() + $acteurs->total() }} talent(s)</span>
     </div>
-    <div class="talent-grid" id="gridRealisateurs">
-        @forelse($realisateurs as $realisateur)
-            <div class="talent-card">
-                <div>
-                    @if($realisateur->photo)
-                        <img src="{{ asset('storage/'.$realisateur->photo) }}" alt="Photo de {{ $realisateur->prenom }}" class="talent-photo">
-                    @else
-                        <img src="https://ui-avatars.com/api/?name={{ urlencode($realisateur->prenom.' '.$realisateur->nom) }}&background=cccccc&color=222222&size=80" class="talent-photo" alt="Avatar">
-                    @endif
-                    <h3 class="talent-name">{{ $realisateur->prenom }} {{ $realisateur->nom }}</h3>
-                    <p><strong>Nationalité :</strong> {{ $realisateur->nationalite ?? 'Non renseignée' }}</p>
-                    <div class="talent-type">{{ $realisateur->type ?? 'Réalisateur' }}</div>
+    <p class="text-muted mb-4">Découvrez les talents du festival, recherchez par nom, type ou nationalité.</p>
+
+    <form method="GET" action="{{ route('public.realisateurs_acteurs') }}" class="row g-2 mb-4">
+        <div class="col-md-4">
+            <input type="text" name="q" class="form-control" value="{{ $search }}" placeholder="Rechercher un acteur ou réalisateur...">
+        </div>
+        <div class="col-md-2">
+            <select name="profil" class="form-select">
+                <option value="tous" {{ $profil === 'tous' ? 'selected' : '' }}>Tous les profils</option>
+                <option value="realisateurs" {{ $profil === 'realisateurs' ? 'selected' : '' }}>Réalisateurs</option>
+                <option value="acteurs" {{ $profil === 'acteurs' ? 'selected' : '' }}>Acteurs</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select name="nationalite" class="form-select">
+                <option value="">Toutes nationalités</option>
+                @foreach($nationalites as $n)
+                    <option value="{{ $n }}" {{ $nationalite === $n ? 'selected' : '' }}>{{ $n }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select name="type" class="form-select">
+                <option value="">Tous types</option>
+                @foreach($types as $t)
+                    <option value="{{ $t }}" {{ $type === $t ? 'selected' : '' }}>{{ $t }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="col-md-1 d-grid">
+            <button class="btn btn-primary" type="submit">Rechercher</button>
+        </div>
+        <div class="col-md-1 d-grid">
+            <a href="{{ route('public.realisateurs_acteurs') }}" class="btn btn-outline-secondary">Reset</a>
+        </div>
+    </form>
+
+    @if($showRealisateurs)
+    <div class="card border-0 shadow-sm mb-4" style="border-radius:12px;">
+        <div class="card-body">
+            <h4 class="mb-3">🎬 Réalisateurs</h4>
+            @if($realisateurs->isEmpty())
+                <div class="alert alert-light border">Aucun réalisateur trouvé.</div>
+            @else
+                <div class="row g-3">
+                    @foreach($realisateurs as $realisateur)
+                        <div class="col-md-6 col-lg-3">
+                            <div class="card talent-card h-100">
+                                <div class="card-body text-center">
+                                    @if($realisateur->photo)
+                                        <img src="{{ asset('storage/'.$realisateur->photo) }}" alt="Photo de {{ $realisateur->prenom }}" class="avatar mb-2">
+                                    @else
+                                        <img src="https://ui-avatars.com/api/?name={{ urlencode($realisateur->prenom.' '.$realisateur->nom) }}&background=cccccc&color=222222&size=88" class="avatar mb-2" alt="Avatar">
+                                    @endif
+                                    <h6 class="mb-1">{{ $realisateur->prenom }} {{ $realisateur->nom }}</h6>
+                                    <p class="small text-muted mb-1">{{ $realisateur->nationalite ?: 'Nationalité non renseignée' }}</p>
+                                    <span class="badge bg-info text-dark mb-2">{{ $realisateur->type ?: 'Réalisateur' }}</span>
+                                    <p class="small text-muted mb-3">{{ \Illuminate\Support\Str::limit($realisateur->biographie, 90) ?: 'Biographie non renseignée.' }}</p>
+                                    <a href="{{ route('public.realisateurs.show', $realisateur) }}" class="btn btn-sm btn-outline-primary">Voir le profil</a>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
                 </div>
-                <a href="{{ route('admin.realisateurs.show', $realisateur) }}" class="details-btn">Voir les détails</a>
-            </div>
-        @empty
-            <p>Aucun réalisateur enregistré.</p>
-        @endforelse
+                <div class="mt-3">{{ $realisateurs->links() }}</div>
+            @endif
+        </div>
     </div>
-</div>
+    @endif
 
-<div id="acteurs" class="tab-content">
-    <div class="search-bar">
-        <input type="text" id="searchActeurs" placeholder="Rechercher un acteur..." onkeyup="filterTalents('acteurs')">
-    </div>
-    <div class="talent-grid" id="gridActeurs">
-        @forelse($acteurs as $acteur)
-            <div class="talent-card">
-                <div>
-                    @if($acteur->photo)
-                        <img src="{{ asset('storage/'.$acteur->photo) }}" alt="Photo de {{ $acteur->prenom }}" class="talent-photo">
-                    @else
-                        <img src="https://ui-avatars.com/api/?name={{ urlencode($acteur->prenom.' '.$acteur->nom) }}&background=cccccc&color=222222&size=80" class="talent-photo" alt="Avatar">
-                    @endif
-                    <h3 class="talent-name">{{ $acteur->prenom }} {{ $acteur->nom }}</h3>
-                    <p><strong>Nationalité :</strong> {{ $acteur->nationalite ?? 'Non renseignée' }}</p>
-                    <div class="talent-type">{{ $acteur->type ?? 'Acteur' }}</div>
+    @if($showActeurs)
+    <div class="card border-0 shadow-sm" style="border-radius:12px;">
+        <div class="card-body">
+            <h4 class="mb-3">🎭 Acteurs</h4>
+            @if($acteurs->isEmpty())
+                <div class="alert alert-light border">Aucun acteur trouvé.</div>
+            @else
+                <div class="row g-3">
+                    @foreach($acteurs as $acteur)
+                        <div class="col-md-6 col-lg-3">
+                            <div class="card talent-card h-100">
+                                <div class="card-body text-center">
+                                    @if($acteur->photo)
+                                        <img src="{{ asset('storage/'.$acteur->photo) }}" alt="Photo de {{ $acteur->prenom }}" class="avatar mb-2">
+                                    @else
+                                        <img src="https://ui-avatars.com/api/?name={{ urlencode($acteur->prenom.' '.$acteur->nom) }}&background=cccccc&color=222222&size=88" class="avatar mb-2" alt="Avatar">
+                                    @endif
+                                    <h6 class="mb-1">{{ $acteur->prenom }} {{ $acteur->nom }}</h6>
+                                    <p class="small text-muted mb-1">{{ $acteur->nationalite ?: 'Nationalité non renseignée' }}</p>
+                                    <span class="badge bg-warning text-dark mb-2">{{ $acteur->type ?: 'Acteur' }}</span>
+                                    <p class="small text-muted mb-3">{{ \Illuminate\Support\Str::limit($acteur->biographie, 90) ?: 'Biographie non renseignée.' }}</p>
+                                    <a href="{{ route('public.acteurs.show', $acteur) }}" class="btn btn-sm btn-outline-primary">Voir le profil</a>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
                 </div>
-                <a href="{{ route('admin.acteurs.show', $acteur) }}" class="details-btn">Voir les détails</a>
-            </div>
-        @empty
-            <p>Aucun acteur enregistré.</p>
-        @endforelse
+                <div class="mt-3">{{ $acteurs->links() }}</div>
+            @endif
+        </div>
     </div>
+    @endif
 </div>
 
-<script>
-function showTab(tab) {
-    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(tabC => tabC.classList.remove('active'));
-    document.querySelector('.tab-btn[onclick="showTab(\''+tab+'\')"]').classList.add('active');
-    document.getElementById(tab).classList.add('active');
-}
-
-// Filtrage JS côté client
-function filterTalents(type) {
-    let input = document.getElementById('search'+(type.charAt(0).toUpperCase()+type.slice(1)));
-    let filter = input.value.toLowerCase();
-    let grid = document.getElementById('grid'+(type.charAt(0).toUpperCase()+type.slice(1)));
-    let cards = grid.getElementsByClassName('talent-card');
-    for (let i = 0; i < cards.length; i++) {
-        let name = cards[i].getElementsByClassName('talent-name')[0];
-        if (name.innerText.toLowerCase().indexOf(filter) > -1) {
-            cards[i].style.display = "";
-        } else {
-            cards[i].style.display = "none";
-        }
-    }
-}
-</script>
-@endsection
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

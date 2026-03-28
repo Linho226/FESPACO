@@ -54,10 +54,16 @@
                                     @elseif($projection->estEnCours())
                                         <div class="small text-success mt-1">En cours de diffusion</div>
                                     @endif
-                                    <a class="btn btn-sm btn-outline-primary mt-2"
-                                       href="{{ route('public.projections.visionner', $projection) }}">
-                                        Regarder cette séance
-                                    </a>
+                                    @if(($projection->film?->galeries?->count() ?? 0) > 0)
+                                        <a class="btn btn-sm btn-outline-primary mt-2"
+                                           href="{{ route('public.projections.visionner', $projection) }}">
+                                            Regarder cette séance
+                                        </a>
+                                    @else
+                                        <div class="alert alert-warning py-2 px-3 mt-2 mb-0 small" role="alert">
+                                            Cette séance n’a pas encore de vidéo disponible.
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                         @endforeach
@@ -126,10 +132,16 @@
                                     <small class="text-muted">{{ $projection->notes }}</small>
                                 @endif
                                 <div class="mt-2">
-                                    <a class="btn btn-sm btn-primary"
-                                       href="{{ route('public.projections.visionner', $projection) }}">
-                                        Regarder cette séance
-                                    </a>
+                                    @if(($projection->film?->galeries?->count() ?? 0) > 0)
+                                        <a class="btn btn-sm btn-primary"
+                                           href="{{ route('public.projections.visionner', $projection) }}">
+                                            Regarder cette séance
+                                        </a>
+                                    @else
+                                        <div class="alert alert-warning py-2 px-3 mb-0 small" role="alert">
+                                            Cette séance n’a pas encore de vidéo disponible.
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                         </div>

@@ -7,6 +7,30 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body { background: #bcc2cb; }
+        .films-admin .card {
+            border-radius: 14px !important;
+        }
+        .films-admin .card .card-body {
+            border-radius: 14px;
+        }
+        .films-admin .table thead th {
+            font-weight: 600;
+            letter-spacing: .2px;
+        }
+        .films-admin .btn {
+            border-radius: 10px;
+        }
+        .films-admin .badge {
+            border-radius: 999px;
+            font-weight: 600;
+        }
+        .films-admin .form-control,
+        .films-admin .form-select {
+            border-radius: 10px;
+        }
+        .films-admin .text-muted {
+            color: #5f6b7a !important;
+        }
     </style>
 </head>
 <body>
