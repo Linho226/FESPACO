@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PublicController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\GalerieController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\FilmController;
@@ -29,9 +30,7 @@ Route::get('/contact', [PublicController::class, 'contact'])->name('public.conta
 
 // --- Routes admin (auth + admin) ---
 Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/', function () {
-        return view('admin.dashboard');
-    })->name('dashboard');
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/actualites', [AdminController::class, 'actualites'])->name('actualites');
     Route::resource('galeries', GalerieController::class)
