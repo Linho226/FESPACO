@@ -48,7 +48,61 @@
 
                 <div class="col-12 col-md-4">
                     <label for="pays" class="form-label">Pays <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control @error('pays') is-invalid @enderror" id="pays" name="pays" value="{{ old('pays') }}" required>
+                    <select class="form-select @error('pays') is-invalid @enderror" id="pays" name="pays" required>
+                        <option value="">-- Choisir un pays --</option>
+                        <option value="Algérie" {{ old('pays') == 'Algérie' ? 'selected' : '' }}>Algérie</option>
+                        <option value="Angola" {{ old('pays') == 'Angola' ? 'selected' : '' }}>Angola</option>
+                        <option value="Bénin" {{ old('pays') == 'Bénin' ? 'selected' : '' }}>Bénin</option>
+                        <option value="Botswana" {{ old('pays') == 'Botswana' ? 'selected' : '' }}>Botswana</option>
+                        <option value="Burkina Faso" {{ old('pays') == 'Burkina Faso' ? 'selected' : '' }}>Burkina Faso</option>
+                        <option value="Burundi" {{ old('pays') == 'Burundi' ? 'selected' : '' }}>Burundi</option>
+                        <option value="Cameroun" {{ old('pays') == 'Cameroun' ? 'selected' : '' }}>Cameroun</option>
+                        <option value="Cap-Vert" {{ old('pays') == 'Cap-Vert' ? 'selected' : '' }}>Cap-Vert</option>
+                        <option value="Comores" {{ old('pays') == 'Comores' ? 'selected' : '' }}>Comores</option>
+                        <option value="Congo" {{ old('pays') == 'Congo' ? 'selected' : '' }}>Congo</option>
+                        <option value="Congo (RDC)" {{ old('pays') == 'Congo (RDC)' ? 'selected' : '' }}>Congo (RDC)</option>
+                        <option value="Côte d'Ivoire" {{ old('pays') == "Côte d'Ivoire" ? 'selected' : '' }}>Côte d'Ivoire</option>
+                        <option value="Djibouti" {{ old('pays') == 'Djibouti' ? 'selected' : '' }}>Djibouti</option>
+                        <option value="Égypte" {{ old('pays') == 'Égypte' ? 'selected' : '' }}>Égypte</option>
+                        <option value="Érythrée" {{ old('pays') == 'Érythrée' ? 'selected' : '' }}>Érythrée</option>
+                        <option value="Eswatini" {{ old('pays') == 'Eswatini' ? 'selected' : '' }}>Eswatini</option>
+                        <option value="Éthiopie" {{ old('pays') == 'Éthiopie' ? 'selected' : '' }}>Éthiopie</option>
+                        <option value="Gabon" {{ old('pays') == 'Gabon' ? 'selected' : '' }}>Gabon</option>
+                        <option value="Gambie" {{ old('pays') == 'Gambie' ? 'selected' : '' }}>Gambie</option>
+                        <option value="Ghana" {{ old('pays') == 'Ghana' ? 'selected' : '' }}>Ghana</option>
+                        <option value="Guinée" {{ old('pays') == 'Guinée' ? 'selected' : '' }}>Guinée</option>
+                        <option value="Guinée-Bissau" {{ old('pays') == 'Guinée-Bissau' ? 'selected' : '' }}>Guinée-Bissau</option>
+                        <option value="Guinée équatoriale" {{ old('pays') == 'Guinée équatoriale' ? 'selected' : '' }}>Guinée équatoriale</option>
+                        <option value="Kenya" {{ old('pays') == 'Kenya' ? 'selected' : '' }}>Kenya</option>
+                        <option value="Lesotho" {{ old('pays') == 'Lesotho' ? 'selected' : '' }}>Lesotho</option>
+                        <option value="Libéria" {{ old('pays') == 'Libéria' ? 'selected' : '' }}>Libéria</option>
+                        <option value="Libye" {{ old('pays') == 'Libye' ? 'selected' : '' }}>Libye</option>
+                        <option value="Madagascar" {{ old('pays') == 'Madagascar' ? 'selected' : '' }}>Madagascar</option>
+                        <option value="Malawi" {{ old('pays') == 'Malawi' ? 'selected' : '' }}>Malawi</option>
+                        <option value="Mali" {{ old('pays') == 'Mali' ? 'selected' : '' }}>Mali</option>
+                        <option value="Maroc" {{ old('pays') == 'Maroc' ? 'selected' : '' }}>Maroc</option>
+                        <option value="Maurice" {{ old('pays') == 'Maurice' ? 'selected' : '' }}>Maurice</option>
+                        <option value="Mauritanie" {{ old('pays') == 'Mauritanie' ? 'selected' : '' }}>Mauritanie</option>
+                        <option value="Mozambique" {{ old('pays') == 'Mozambique' ? 'selected' : '' }}>Mozambique</option>
+                        <option value="Namibie" {{ old('pays') == 'Namibie' ? 'selected' : '' }}>Namibie</option>
+                        <option value="Niger" {{ old('pays') == 'Niger' ? 'selected' : '' }}>Niger</option>
+                        <option value="Nigéria" {{ old('pays') == 'Nigéria' ? 'selected' : '' }}>Nigéria</option>
+                        <option value="Ouganda" {{ old('pays') == 'Ouganda' ? 'selected' : '' }}>Ouganda</option>
+                        <option value="Rwanda" {{ old('pays') == 'Rwanda' ? 'selected' : '' }}>Rwanda</option>
+                        <option value="Sao Tomé-et-Principe" {{ old('pays') == 'Sao Tomé-et-Principe' ? 'selected' : '' }}>Sao Tomé-et-Principe</option>
+                        <option value="Sénégal" {{ old('pays') == 'Sénégal' ? 'selected' : '' }}>Sénégal</option>
+                        <option value="Seychelles" {{ old('pays') == 'Seychelles' ? 'selected' : '' }}>Seychelles</option>
+                        <option value="Sierra Leone" {{ old('pays') == 'Sierra Leone' ? 'selected' : '' }}>Sierra Leone</option>
+                        <option value="Somalie" {{ old('pays') == 'Somalie' ? 'selected' : '' }}>Somalie</option>
+                        <option value="Soudan" {{ old('pays') == 'Soudan' ? 'selected' : '' }}>Soudan</option>
+                        <option value="Soudan du Sud" {{ old('pays') == 'Soudan du Sud' ? 'selected' : '' }}>Soudan du Sud</option>
+                        <option value="Tanzanie" {{ old('pays') == 'Tanzanie' ? 'selected' : '' }}>Tanzanie</option>
+                        <option value="Tchad" {{ old('pays') == 'Tchad' ? 'selected' : '' }}>Tchad</option>
+                        <option value="Togo" {{ old('pays') == 'Togo' ? 'selected' : '' }}>Togo</option>
+                        <option value="Tunisie" {{ old('pays') == 'Tunisie' ? 'selected' : '' }}>Tunisie</option>
+                        <option value="Zambie" {{ old('pays') == 'Zambie' ? 'selected' : '' }}>Zambie</option>
+                        <option value="Zimbabwe" {{ old('pays') == 'Zimbabwe' ? 'selected' : '' }}>Zimbabwe</option>
+                    </select>
                     @error('pays') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
 
@@ -60,7 +114,21 @@
 
                 <div class="col-12 col-md-4">
                     <label for="categorie" class="form-label">Catégorie <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control @error('categorie') is-invalid @enderror" id="categorie" name="categorie" value="{{ old('categorie') }}" required>
+                    <select class="form-select @error('categorie') is-invalid @enderror" id="categorie" name="categorie" required>
+                        <option value="">-- Choisir une catégorie --</option>
+                        <option value="Animation" {{ old('categorie') == 'Animation' ? 'selected' : '' }}>Animation</option>
+                        <option value="Drame" {{ old('categorie') == 'Drame' ? 'selected' : '' }}>Drame</option>
+                        <option value="Comédie" {{ old('categorie') == 'Comédie' ? 'selected' : '' }}>Comédie</option>
+                        <option value="Documentaire" {{ old('categorie') == 'Documentaire' ? 'selected' : '' }}>Documentaire</option>
+                        <option value="Action" {{ old('categorie') == 'Action' ? 'selected' : '' }}>Action</option>
+                        <option value="Thriller" {{ old('categorie') == 'Thriller' ? 'selected' : '' }}>Thriller</option>
+                        <option value="Aventure" {{ old('categorie') == 'Aventure' ? 'selected' : '' }}>Aventure</option>
+                        <option value="Science-fiction" {{ old('categorie') == 'Science-fiction' ? 'selected' : '' }}>Science-fiction</option>
+                        <option value="Fantastique" {{ old('categorie') == 'Fantastique' ? 'selected' : '' }}>Fantastique</option>
+                        <option value="Horreur" {{ old('categorie') == 'Horreur' ? 'selected' : '' }}>Horreur</option>
+                        <option value="Romance" {{ old('categorie') == 'Romance' ? 'selected' : '' }}>Romance</option>
+                        <option value="Autre" {{ old('categorie') == 'Autre' ? 'selected' : '' }}>Autre</option>
+                    </select>
                     @error('categorie') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
 

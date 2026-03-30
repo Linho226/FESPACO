@@ -6,7 +6,71 @@
     <title>@yield('title', 'Administration FESPACO')</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        :root {
+                                                /* Contraste renforcé pour dashboard et widgets */
+                                                .dashboard-header h1,
+                                                .stat-content p,
+                                                .stat-content h3,
+                                                .period-label,
+                                                .frequency-label,
+                                                .frequency-value,
+                                                .film-title,
+                                                .card-title,
+                                                .actualite-title,
+                                                .projection-badge,
+                                                .upcoming-date strong,
+                                                .upcoming-time,
+                                                .upcoming-film .film-title {
+                                                    color: var(--app-text) !important;
+                                                }
+                                                .actualite-desc,
+                                                .period-count,
+                                                .projection-period-item .period-count,
+                                                .most-projected-list .text-muted,
+                                                .actualite-date,
+                                                .upcoming-film small,
+                                                .text-muted {
+                                                    color: var(--muted-text) !important;
+                                                }
+                                        /* Contraste renforcé pour tous les labels et aides de formulaire */
+                                        .form-label,
+                                        label,
+                                        .form-text {
+                                            color: var(--app-text) !important;
+                                        }
+                                        .text-muted {
+                                            color: var(--muted-text) !important;
+                                        }
+                                /* Correction contraste pour .realisateur-admin */
+                                .realisateur-admin h3,
+                                .realisateur-admin strong,
+                                .realisateur-admin p {
+                                    color: var(--app-text);
+                                }
+                                /* Correction contraste pour .acteur-admin */
+                                .acteur-admin h3,
+                                .acteur-admin strong,
+                                .acteur-admin p {
+                                    color: var(--app-text);
+                                }
+                                /* Correction contraste pour .films-admin valeurs */
+                                .films-admin strong,
+                                .films-admin p {
+                                    color: var(--app-text);
+                                }
+                        :root {
+                    /* Correction contraste labels, textes et placeholders */
+                    .admin-main label,
+                    .admin-main .form-label,
+                    .admin-main .form-check-label {
+                        color: var(--app-text);
+                    }
+                    .admin-main .form-control::placeholder {
+                        color: var(--muted-text);
+                        opacity: 1;
+                    }
+                    .admin-main .text-muted {
+                        color: var(--muted-text) !important;
+                    }
             color-scheme: light;
             --sidebar-width: 272px;
             --sidebar-collapsed-width: 92px;

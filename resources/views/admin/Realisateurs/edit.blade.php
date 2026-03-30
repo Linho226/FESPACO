@@ -41,8 +41,14 @@
                 </div>
                 <div class="col-md-6 mb-3">
                     <label for="type" class="form-label fw-bold">Type</label>
-                    <input type="text" id="type" name="type" class="form-control"
-                           value="{{ old('type', $realisateur->type) }}">
+                    <select id="type" name="type" class="form-select">
+                        <option value="">-- Choisir un type --</option>
+                        <option value="long metrage" {{ old('type', $realisateur->type) == 'long metrage' ? 'selected' : '' }}>Long métrage</option>
+                        <option value="court metrage" {{ old('type', $realisateur->type) == 'court metrage' ? 'selected' : '' }}>Court métrage</option>
+                        <option value="documentaire" {{ old('type', $realisateur->type) == 'documentaire' ? 'selected' : '' }}>Documentaire</option>
+                        <option value="animation" {{ old('type', $realisateur->type) == 'animation' ? 'selected' : '' }}>Animation</option>
+                        <option value="autre" {{ old('type', $realisateur->type) == 'autre' ? 'selected' : '' }}>Autre</option>
+                    </select>
                 </div>
             </div>
 

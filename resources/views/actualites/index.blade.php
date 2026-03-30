@@ -8,7 +8,7 @@
         <h2>Actualités</h2>
         <a href="{{ route('admin.actualites.create') }}" class="btn btn-primary">Nouvelle actualité</a>
     </div>
-    <table class="table table-bordered table-hover bg-white">
+    <table class="table table-bordered table-hover">
         <thead>
             <tr>
                 <th>ID</th>

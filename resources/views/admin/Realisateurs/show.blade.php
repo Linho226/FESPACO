@@ -3,7 +3,7 @@
 @section('title', 'Détail réalisateur')
 
 @section('content')
-<div class="container" style="max-width: 900px;">
+<div class="container realisateur-admin" style="max-width: 900px;">
     <div class="card shadow-sm">
         <div class="card-body">
             <div class="row">

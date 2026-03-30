@@ -57,7 +57,7 @@
                 </div>
 
                 <div class="col-lg-4">
-                    <div class="border rounded p-3 bg-light text-center h-100 d-flex flex-column align-items-center justify-content-center">
+                    <div class="border rounded p-3 text-center h-100 d-flex flex-column align-items-center justify-content-center">
                         @if($film->affiche)
                             <img src="{{ asset('storage/'.$film->affiche) }}" alt="Affiche de {{ $film->titre }}" class="img-fluid rounded" style="max-height:280px; object-fit:cover;">
                         @else

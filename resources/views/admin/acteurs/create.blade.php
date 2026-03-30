@@ -40,8 +40,15 @@
                 </div>
                 <div class="col-md-6 mb-3">
                     <label for="type" class="form-label fw-bold">Type</label>
-                    <input type="text" id="type" name="type" class="form-control"
-                           value="{{ old('type') }}" placeholder="Ex: Principal, Second rôle...">
+                    <select id="type" name="type" class="form-select">
+                        <option value="">-- Choisir un type --</option>
+                        <option value="Principal" {{ old('type') == 'Principal' ? 'selected' : '' }}>Principal</option>
+                        <option value="Second rôle" {{ old('type') == 'Second rôle' ? 'selected' : '' }}>Second rôle</option>
+                        <option value="Caméo" {{ old('type') == 'Caméo' ? 'selected' : '' }}>Caméo</option>
+                        <option value="Voix" {{ old('type') == 'Voix' ? 'selected' : '' }}>Voix</option>
+                        <option value="Figurant" {{ old('type') == 'Figurant' ? 'selected' : '' }}>Figurant</option>
+                        <option value="Autre" {{ old('type') == 'Autre' ? 'selected' : '' }}>Autre</option>
+                    </select>
                 </div>
             </div>
 

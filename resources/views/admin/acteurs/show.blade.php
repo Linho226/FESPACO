@@ -3,7 +3,7 @@
 @section('title', 'Détail acteur')
 
 @section('content')
-<div class="container" style="max-width: 900px;">
+<div class="container acteur-admin" style="max-width: 900px;">
     <div class="card shadow-sm">
         <div class="card-body">
             <div class="row">
