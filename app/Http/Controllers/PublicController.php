@@ -65,10 +65,12 @@ class PublicController extends Controller
         }
 
         if (!$showRealisateurs) {
+            // Force une requête vide pour désactiver complètement ce bloc.
             $realisateursQuery->whereRaw('1 = 0');
         }
 
         if (!$showActeurs) {
+            // Même stratégie côté acteurs selon le filtre de profil.
             $acteursQuery->whereRaw('1 = 0');
         }
 
@@ -133,6 +135,7 @@ class PublicController extends Controller
 
     public function projections(Request $request)
     {
+        // Précharge uniquement les médias vidéo exploitables pour la page projections.
         $baseQuery = Projection::with(['film.galeries' => function ($query) {
                 $query->where('type_media', 'video')
                     ->where(function ($q) {
@@ -167,6 +170,7 @@ class PublicController extends Controller
         $projections = $baseQuery->get();
 
         $now = Carbon::now();
+        // Propose d'abord les prochaines séances; fallback sur les plus récentes.
         $recommandees = $projections
             ->filter(fn ($projection) => $projection->dateHeure()->gte($now))
             ->sortBy(fn ($projection) => $projection->dateHeure()->timestamp)
@@ -181,6 +185,7 @@ class PublicController extends Controller
         }
 
         $etat = $request->input('etat', 'tous');
+        // Filtre final en mémoire selon l'état calculé de chaque projection.
         $projections = $projections->filter(function ($projection) use ($etat) {
             return match ($etat) {
                 'en_cours' => $projection->estEnCours(),
@@ -215,6 +220,7 @@ class PublicController extends Controller
             return redirect()->route('public.projections')->with('warning', $watchState['message']);
         }
 
+        // Décalage utilisé pour synchroniser la lecture média avec l'avancement réel.
         $playbackOffsetSeconds = max(0, (int) $projection->tempsEcouleSecondes());
 
         $medias = collect($film?->galeries ?? [])
@@ -279,6 +285,7 @@ class PublicController extends Controller
             return null;
         }
 
+        // Ajoute un point de départ pour aligner l'embed sur la timeline de projection.
         $startAtSeconds = max(0, $startAtSeconds);
         $youtubeStartParam = $startAtSeconds > 0 ? '&start='.$startAtSeconds : '';
         $vimeoStartFragment = $startAtSeconds > 0 ? '#t='.$startAtSeconds.'s' : '';
@@ -306,6 +313,7 @@ class PublicController extends Controller
     {
         $filmTitle = $projection->film?->titre ?? 'cette projection';
 
+        // Priorité des états: en cours > pause > terminée > à venir.
         if ($projection->estEnCours()) {
             return [
                 'can_watch' => true,

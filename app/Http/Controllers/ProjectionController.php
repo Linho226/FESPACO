@@ -16,6 +16,7 @@ class ProjectionController extends Controller
      */
     public function index(Request $request): View
     {
+        // Charge le film lié pour lister le programme sans requêtes N+1.
         $query = Projection::with('film')->orderBy('date')->orderBy('heure');
 
         if ($request->filled('search')) {
@@ -65,8 +66,10 @@ class ProjectionController extends Controller
             'publie'  => 'boolean',
         ]);
 
+        // Normalise la checkbox en booléen fiable (true/false).
         $validated['publie'] = $request->boolean('publie');
 
+        // Empêche deux projections qui se chevauchent dans la même salle.
         if ($conflit = $this->detectConflitSalle($validated)) {
             return back()
                 ->withInput()
@@ -107,6 +110,7 @@ class ProjectionController extends Controller
 
         $validated['publie'] = $request->boolean('publie');
 
+        // Ignore la projection courante lors du contrôle de conflit en édition.
         if ($conflit = $this->detectConflitSalle($validated, $projection->id)) {
             return back()
                 ->withInput()
@@ -146,6 +150,7 @@ class ProjectionController extends Controller
 
         $debutAt = $projection->debut_at;
         if ($debutAt === null) {
+            // Si l'horaire prévu est déjà passé, on cale le départ sur l'horaire officiel.
             $debutAt = $now->copy()->gte($projection->dateHeure())
                 ? $projection->dateHeure()
                 : $now->copy();
@@ -153,6 +158,7 @@ class ProjectionController extends Controller
 
         $pauseTotal = (int) $projection->pause_total_seconds;
         if ($projection->fin_at !== null) {
+            // Reprise après pause: cumule la durée de pause écoulée.
             $pauseTotal += max(0, $projection->fin_at->diffInSeconds($now, false));
         }
 
@@ -182,6 +188,7 @@ class ProjectionController extends Controller
         }
 
         if ($projection->debut_at === null) {
+            // Définit un début implicite si on met en pause sans démarrage explicite.
             $projection->debut_at = now()->gte($projection->dateHeure())
                 ? $projection->dateHeure()
                 : now();
@@ -195,6 +202,7 @@ class ProjectionController extends Controller
 
     private function detectConflitSalle(array $data, ?int $excludeId = null): ?Projection
     {
+        // Calcule l'intervalle horaire de la projection à créer/modifier.
         $film = Film::find($data['film_id']);
         $dureeCourante = max((int) ($film?->duree ?? 0), 1);
 
@@ -216,6 +224,7 @@ class ProjectionController extends Controller
             $debutExistant = $projection->dateHeure();
             $finExistante = $debutExistant->copy()->addMinutes($dureeExistante);
 
+            // Chevauchement strict entre deux intervalles [debut, fin).
             $overlap = $debutCourant->lt($finExistante) && $finCourante->gt($debutExistant);
 
             if ($overlap) {

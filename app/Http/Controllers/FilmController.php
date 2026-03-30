@@ -12,11 +12,13 @@ class FilmController extends Controller
 {
     public function index(Request $request)
     {
+        // Accepte q ou search pour rester compatible avec plusieurs formulaires.
         $search = trim((string) $request->input('q', $request->input('search', '')));
 
         $query = Film::query();
 
         if ($search !== '') {
+            // Regroupe les champs textuels filtrables dans une seule condition.
             $query->where(function ($builder) use ($search) {
                 $builder->where('titre', 'like', "%{$search}%")
                     ->orWhere('realisateur', 'like', "%{$search}%")
@@ -41,9 +43,11 @@ class FilmController extends Controller
 
     public function store(Request $request)
     {
+        // Réutilise les mêmes règles pour create et update.
         $validated = $this->validateFilm($request);
 
         if ($request->hasFile('affiche')) {
+            // Stocke l'affiche sur le disque public pour affichage direct.
             $validated['affiche'] = $request->file('affiche')->store('affiches', 'public');
         }
 
@@ -69,6 +73,7 @@ class FilmController extends Controller
         $validated = $this->validateFilm($request);
 
         if ($request->hasFile('affiche')) {
+            // Supprime l'ancien fichier pour éviter les images orphelines.
             if ($film->affiche) {
                 Storage::disk('public')->delete($film->affiche);
             }
@@ -82,6 +87,7 @@ class FilmController extends Controller
 
     public function destroy(Film $film)
     {
+        // Nettoie le fichier lié avant suppression de l'entrée en base.
         if ($film->affiche) {
             Storage::disk('public')->delete($film->affiche);
         }
@@ -93,6 +99,7 @@ class FilmController extends Controller
 
     private function validateFilm(Request $request): array
     {
+        // Point unique de validation pour garder des règles cohérentes.
         return $request->validate([
             'titre'            => 'required|string|max:255',
             'description'      => 'nullable|string',

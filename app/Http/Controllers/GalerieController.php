@@ -12,6 +12,7 @@ class GalerieController extends Controller
     public function index(Request $request)
     {
         $filmId = $request->input('film_id');
+        // Charge le film lié pour l'affichage sans requêtes N+1.
         $query  = Galerie::with('film')->orderByDesc('created_at');
 
         if ($filmId) {
@@ -21,18 +22,19 @@ class GalerieController extends Controller
         $galeries = $query->paginate(12)->withQueryString();
         $films    = Film::orderBy('titre')->get();
 
-        return view('galeries.index', compact('galeries', 'films', 'filmId'));
+        return view('admin.galeries.index', compact('galeries', 'films', 'filmId'));
     }
 
     public function create(Request $request)
     {
         $films        = Film::orderBy('titre')->get();
         $selectedFilm = $request->query('film_id');
-        return view('galeries.create', compact('films', 'selectedFilm'));
+        return view('admin.galeries.create', compact('films', 'selectedFilm'));
     }
 
     public function store(Request $request)
     {
+        // Validation commune des métadonnées du média.
         $validated = $request->validate([
             'film_id'     => 'nullable|exists:films,id',
             'titre'       => 'required|string|max:255',
@@ -44,11 +46,13 @@ class GalerieController extends Controller
         ]);
 
         if ($request->hasFile('fichier')) {
+            // Stocke le média uploadé sur le disque public.
             $validated['fichier'] = $request->file('fichier')->store('galerie', 'public');
         }
 
         Galerie::create($validated);
 
+        // Si le média est rattaché à un film, on revient sur sa fiche.
         $redirect = $request->filled('film_id')
             ? route('admin.films.show', $request->input('film_id'))
             : route('admin.galeries.index');
@@ -59,11 +63,12 @@ class GalerieController extends Controller
     public function edit(Galerie $galerie)
     {
         $films = Film::orderBy('titre')->get();
-        return view('galeries.edit', compact('galerie', 'films'));
+        return view('admin.galeries.edit', compact('galerie', 'films'));
     }
 
     public function update(Request $request, Galerie $galerie)
     {
+        // Même règles de validation que la création pour garder la cohérence.
         $validated = $request->validate([
             'film_id'     => 'nullable|exists:films,id',
             'titre'       => 'required|string|max:255',
@@ -75,6 +80,7 @@ class GalerieController extends Controller
         ]);
 
         if ($request->hasFile('fichier')) {
+            // Supprime l'ancien fichier pour éviter les médias orphelins.
             if ($galerie->fichier) {
                 Storage::disk('public')->delete($galerie->fichier);
             }
@@ -88,6 +94,7 @@ class GalerieController extends Controller
 
     public function destroy(Galerie $galerie)
     {
+        // Nettoie le stockage avant suppression de l'entrée en base.
         if ($galerie->fichier) {
             Storage::disk('public')->delete($galerie->fichier);
         }
@@ -108,13 +115,15 @@ class GalerieController extends Controller
 
     public function play(Galerie $galerie)
     {
+        // Prépare un lien d'embed quand le fournisseur est supporté.
         $embedUrl = $this->getEmbedUrl($galerie->lien);
 
-        return view('galeries.play', compact('galerie', 'embedUrl'));
+        return view('admin.galeries.play', compact('galerie', 'embedUrl'));
     }
 
     private function getEmbedUrl(?string $url): ?string
     {
+        // Convertit des URL YouTube/Vimeo en URL intégrables iframe.
         if (!$url) {
             return null;
         }

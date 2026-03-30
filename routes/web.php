@@ -31,18 +31,15 @@ Route::get('/contact', [PublicController::class, 'contact'])->name('public.conta
 // --- Routes admin (auth + admin) ---
 Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
-
-    Route::get('/actualites', [AdminController::class, 'actualites'])->name('actualites');
-    Route::resource('galeries', GalerieController::class)
-        ->parameters(['galeries' => 'galerie'])
-        ->except(['show']);
-    Route::get('galeries/{galerie}/lecture', [GalerieController::class, 'play'])->name('galeries.play');
-
+    Route::resource('actualites', ActualiteController::class);
     Route::resource('films', FilmController::class);
     Route::resource('realisateurs', RealisateurController::class);
     Route::resource('acteurs', ActeurController::class);
     Route::resource('projections', ProjectionController::class);
-    Route::resource('actualites', ActualiteController::class);
+    Route::get('galeries/{galerie}/play', [GalerieController::class, 'play'])->name('galeries.play');
+    Route::resource('galeries', GalerieController::class)->parameters([
+        'galeries' => 'galerie',
+    ]);
     Route::post('projections/{projection}/demarrer', [ProjectionController::class, 'demarrer'])->name('projections.demarrer');
     Route::post('projections/{projection}/arreter',  [ProjectionController::class, 'arreter'])->name('projections.arreter');
 });

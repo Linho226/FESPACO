@@ -14,6 +14,7 @@ class RealisateurController extends Controller
 
         if ($request->filled('search')) {
             $search = $request->input('search');
+            // Applique le même mot-clé sur plusieurs champs textuels.
             $query->where(function ($builder) use ($search) {
                 $builder->where('nom', 'like', "%{$search}%")
                     ->orWhere('prenom', 'like', "%{$search}%")
@@ -39,9 +40,11 @@ class RealisateurController extends Controller
 
     public function store(Request $request)
     {
+        // Réutilise les règles/messages pour store et update.
         $data = $request->validate($this->rules(), $this->messages());
 
         if ($request->hasFile('photo')) {
+            // Enregistre la photo sur le disque public.
             $data['photo'] = $request->file('photo')->store('realisateurs', 'public');
         }
 
@@ -60,6 +63,7 @@ class RealisateurController extends Controller
         $data = $request->validate($this->rules(), $this->messages());
 
         if ($request->hasFile('photo')) {
+            // Nettoie l'ancienne photo pour éviter les fichiers orphelins.
             if ($realisateur->photo && Storage::disk('public')->exists($realisateur->photo)) {
                 Storage::disk('public')->delete($realisateur->photo);
             }
@@ -74,6 +78,7 @@ class RealisateurController extends Controller
 
     public function destroy(Realisateur $realisateur)
     {
+        // Supprime la photo liée avant la suppression en base.
         if ($realisateur->photo && Storage::disk('public')->exists($realisateur->photo)) {
             Storage::disk('public')->delete($realisateur->photo);
         }

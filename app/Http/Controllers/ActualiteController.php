@@ -13,8 +13,9 @@ class ActualiteController extends Controller
      */
     public function index()
     {
+        // Charge l'auteur en eager loading pour éviter les requêtes N+1 dans la liste.
         $actualites = Actualite::with('auteur')->orderByDesc('date_publication')->paginate(10);
-        return view('actualites.index', compact('actualites'));
+        return view('admin.actualites.index', compact('actualites'));
     }
 
     /**
@@ -22,7 +23,7 @@ class ActualiteController extends Controller
      */
     public function create()
     {
-        return view('actualites.create');
+        return view('admin.actualites.create');
     }
 
     /**
@@ -30,6 +31,7 @@ class ActualiteController extends Controller
      */
     public function store(Request $request)
     {
+        // Validation centralisée des champs du formulaire de publication.
         $validated = $request->validate([
             'titre' => 'required|string|max:255',
             'contenu' => 'required|string',
@@ -39,6 +41,7 @@ class ActualiteController extends Controller
 
         $imagePath = null;
         if ($request->hasFile('image')) {
+            // Stocke l'image sur le disque public pour l'affichage côté front.
             $imagePath = $request->file('image')->store('actualites', 'public');
         }
 
@@ -47,6 +50,7 @@ class ActualiteController extends Controller
             'contenu' => $validated['contenu'],
             'image' => $imagePath,
             'date_publication' => $validated['date_publication'],
+            // Associe automatiquement l'actualité à l'utilisateur connecté.
             'auteur_id' => auth()->id(),
         ]);
 
@@ -59,7 +63,7 @@ class ActualiteController extends Controller
     public function show(Actualite $actualite)
     {
         $actualite->load('auteur');
-        return view('actualites.show', compact('actualite'));
+        return view('admin.actualites.show', compact('actualite'));
     }
 
     /**
@@ -67,7 +71,7 @@ class ActualiteController extends Controller
      */
     public function edit(Actualite $actualite)
     {
-        return view('actualites.edit', compact('actualite'));
+        return view('admin.actualites.edit', compact('actualite'));
     }
 
     /**
@@ -75,6 +79,7 @@ class ActualiteController extends Controller
      */
     public function update(Request $request, Actualite $actualite)
     {
+        // Même règles de validation que la création pour garder la cohérence.
         $validated = $request->validate([
             'titre' => 'required|string|max:255',
             'contenu' => 'required|string',
@@ -89,6 +94,7 @@ class ActualiteController extends Controller
         ];
 
         if ($request->hasFile('image')) {
+            // Remplace uniquement l'image quand un nouveau fichier est fourni.
             $data['image'] = $request->file('image')->store('actualites', 'public');
         }
 
@@ -102,6 +108,7 @@ class ActualiteController extends Controller
      */
     public function destroy(Actualite $actualite)
     {
+        // Nettoie le fichier image avant suppression de l'enregistrement.
         if ($actualite->image) {
             Storage::disk('public')->delete($actualite->image);
         }

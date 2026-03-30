@@ -26,8 +26,10 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
+        // Applique uniquement les champs validés par la FormRequest.
         $request->user()->fill($request->validated());
 
+        // Un changement d'email invalide la vérification actuelle.
         if ($request->user()->isDirty('email')) {
             $request->user()->email_verified_at = null;
         }
@@ -42,6 +44,7 @@ class ProfileController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        // Demande le mot de passe courant pour sécuriser la suppression.
         $request->validateWithBag('userDeletion', [
             'password' => ['required', 'current_password'],
         ]);
@@ -52,6 +55,7 @@ class ProfileController extends Controller
 
         $user->delete();
 
+        // Invalide complètement la session après suppression du compte.
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 

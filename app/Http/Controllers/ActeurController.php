@@ -14,6 +14,7 @@ class ActeurController extends Controller
 
         if ($request->filled('search')) {
             $search = $request->input('search');
+            // Regroupe les champs concernés pour appliquer un filtre texte unique.
             $query->where(function ($builder) use ($search) {
                 $builder->where('nom', 'like', "%{$search}%")
                     ->orWhere('prenom', 'like', "%{$search}%")
@@ -39,6 +40,7 @@ class ActeurController extends Controller
 
     public function store(Request $request)
     {
+        // Les règles et messages sont centralisés pour store/update.
         $data = $request->validate($this->rules(), $this->messages());
 
         if ($request->hasFile('photo')) {
@@ -60,6 +62,7 @@ class ActeurController extends Controller
         $data = $request->validate($this->rules(), $this->messages());
 
         if ($request->hasFile('photo')) {
+            // Supprime l'ancienne image pour éviter les fichiers orphelins.
             if ($acteur->photo && Storage::disk('public')->exists($acteur->photo)) {
                 Storage::disk('public')->delete($acteur->photo);
             }
@@ -74,6 +77,7 @@ class ActeurController extends Controller
 
     public function destroy(Acteur $acteur)
     {
+        // Nettoie le fichier lié avant suppression de l'enregistrement.
         if ($acteur->photo && Storage::disk('public')->exists($acteur->photo)) {
             Storage::disk('public')->delete($acteur->photo);
         }
