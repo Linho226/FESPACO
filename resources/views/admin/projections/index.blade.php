@@ -25,9 +25,12 @@
             @foreach($alertes as $alerte)
                 @if($alerte->estEnCours())
                     @php
-                        $dureeFilm = (int) ($alerte->film->duree ?? 0);
-                        $finPrevue = $dureeFilm > 0
-                            ? $alerte->dateHeure()->copy()->addMinutes($dureeFilm)->format('H\hi')
+                        $dureeSecondes = $alerte->dureeProjectionSecondes();
+                        $dureeLabel = $dureeSecondes > 0
+                            ? \App\Models\Film::formatterDureeSecondes($dureeSecondes)
+                            : null;
+                        $finPrevue = $dureeSecondes > 0
+                            ? $alerte->dateHeure()->copy()->addSeconds($dureeSecondes)->format('H\hi:s')
                             : null;
                     @endphp
                     <div class="alert alert-success d-flex align-items-start gap-3 mb-2 shadow-sm" role="alert">
@@ -35,20 +38,23 @@
                         <div>
                             <strong>Projection en cours !</strong>
                             <div>
-                                <strong>{{ $alerte->film->titre ?? '—' }}</strong>
-                                — {{ $alerte->salle }}, {{ $alerte->lieu }}
+                                <strong>{{ $alerte->getTitreAffiche() }}</strong>
+                                — {{ $alerte->lieu }}
                                 — débutée à {{ \Carbon\Carbon::parse($alerte->heure)->format('H\hi') }}
-                                @if($dureeFilm > 0)
-                                    — durée {{ $dureeFilm }} min — fin prévue {{ $finPrevue }}
+                                @if($dureeSecondes > 0)
+                                    — durée {{ $dureeLabel }} — fin prévue {{ $finPrevue }}
                                 @endif
                             </div>
                         </div>
                     </div>
                 @elseif($alerte->approcheImminente())
                     @php
-                        $dureeFilm = (int) ($alerte->film->duree ?? 0);
-                        $finPrevue = $dureeFilm > 0
-                            ? $alerte->dateHeure()->copy()->addMinutes($dureeFilm)->format('H\hi')
+                        $dureeSecondes = $alerte->dureeProjectionSecondes();
+                        $dureeLabel = $dureeSecondes > 0
+                            ? \App\Models\Film::formatterDureeSecondes($dureeSecondes)
+                            : null;
+                        $finPrevue = $dureeSecondes > 0
+                            ? $alerte->dateHeure()->copy()->addSeconds($dureeSecondes)->format('H\hi:s')
                             : null;
                     @endphp
                     <div class="alert alert-warning d-flex align-items-start gap-3 mb-2 shadow-sm" role="alert">
@@ -61,11 +67,11 @@
                             @endphp
                             <strong>Projection imminente dans {{ $diffHeures }}h{{ $diffMins > 0 ? $diffMins.'min' : '' }} !</strong>
                             <div>
-                                <strong>{{ $alerte->film->titre ?? '—' }}</strong>
-                                — {{ $alerte->salle }}, {{ $alerte->lieu }}
+                                <strong>{{ $alerte->getTitreAffiche() }}</strong>
+                                — {{ $alerte->lieu }}
                                 — le {{ $alerte->date->format('d/m/Y') }} à {{ \Carbon\Carbon::parse($alerte->heure)->format('H\hi') }}
-                                @if($dureeFilm > 0)
-                                    — durée {{ $dureeFilm }} min — fin prévue {{ $finPrevue }}
+                                @if($dureeSecondes > 0)
+                                    — durée {{ $dureeLabel }} — fin prévue {{ $finPrevue }}
                                 @endif
                             </div>
                         </div>
@@ -79,7 +85,7 @@
     <form method="GET" action="" class="row g-2 mb-4">
         <div class="col-md-5">
             <input type="text" name="search" class="form-control"
-                placeholder="Rechercher par film, salle, lieu..."
+                placeholder="Rechercher par film, lieu..."
                 value="{{ request('search') }}">
         </div>
         <div class="col-md-4">
@@ -102,7 +108,6 @@
                     <th>Heure</th>
                     <th>Durée</th>
                     <th>Fin prévue</th>
-                    <th>Salle</th>
                     <th>Lieu</th>
                     <th>Notes</th>
                     <th>État</th>
@@ -112,26 +117,20 @@
             </thead>
             <tbody>
             @forelse($projections as $projection)
-                @php $etat = $projection->etat(); @endphp
+                @php
+                    $etat = $projection->etat();
+                    $dureeSecondes = $projection->dureeProjectionSecondes();
+                @endphp
                 <tr class="{{ $projection->estEnCours() ? 'table-success' : ($projection->approcheImminente() ? 'table-warning' : '') }}">
-                    <td><strong>{{ $projection->film->titre ?? '—' }}</strong></td>
+                    <td><strong>{{ $projection->getTitreAffiche() }}</strong></td>
                     <td>{{ $projection->date->format('d/m/Y') }}</td>
                     <td>{{ \Carbon\Carbon::parse($projection->heure)->format('H\hi') }}</td>
                     <td>
-                        @if($projection->film && $projection->film->duree)
-                            {{ $projection->film->duree }} min
-                        @else
-                            —
-                        @endif
+                        {{ \App\Models\Film::formatterDureeSecondes($dureeSecondes) }}
                     </td>
                     <td>
-                        @if($projection->film && $projection->film->duree)
-                            {{ $projection->dateHeure()->copy()->addMinutes((int) $projection->film->duree)->format('H\hi') }}
-                        @else
-                            —
-                        @endif
+                        {{ $projection->finPrevue()->format('H\hi:s') }}
                     </td>
-                    <td>{{ $projection->salle }}</td>
                     <td>{{ $projection->lieu }}</td>
                     <td>{{ $projection->notes ?? '—' }}</td>
                     <td>
@@ -188,7 +187,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="11" class="text-center text-muted">Aucune projection enregistrée.</td>
+                    <td colspan="10" class="text-center text-muted">Aucune projection enregistrée.</td>
                 </tr>
             @endforelse
             </tbody>

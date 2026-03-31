@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="900" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#06152f"/>
+      <stop offset="1" stop-color="#0b2f2a"/>
+    </linearGradient>
+    <linearGradient id="card" x1="180" y1="180" x2="1020" y2="760" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0f172a" stop-opacity="0.92"/>
+      <stop offset="1" stop-color="#1f2937" stop-opacity="0.8"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="200" y1="140" x2="1000" y2="140" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#006241"/>
+      <stop offset="1" stop-color="#d97706"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="900" fill="url(#bg)"/>
+  <circle cx="1040" cy="120" r="180" fill="#d97706" fill-opacity="0.12"/>
+  <circle cx="180" cy="760" r="220" fill="#16a34a" fill-opacity="0.1"/>
+
+  <rect x="160" y="140" width="880" height="620" rx="30" fill="url(#card)" stroke="#334155"/>
+  <rect x="200" y="180" width="800" height="12" rx="6" fill="url(#accent)"/>
+
+  <g opacity="0.95">
+    <rect x="250" y="260" width="170" height="300" rx="16" fill="#111827" stroke="#475569"/>
+    <rect x="275" y="288" width="120" height="18" rx="9" fill="#334155"/>
+    <rect x="275" y="330" width="120" height="18" rx="9" fill="#334155"/>
+    <rect x="275" y="372" width="120" height="18" rx="9" fill="#334155"/>
+    <rect x="275" y="414" width="120" height="18" rx="9" fill="#334155"/>
+    <rect x="275" y="456" width="120" height="18" rx="9" fill="#334155"/>
+  </g>
+
+  <g opacity="0.95">
+    <rect x="460" y="260" width="490" height="220" rx="20" fill="#0f172a" stroke="#475569"/>
+    <rect x="490" y="294" width="430" height="18" rx="9" fill="#1e293b"/>
+    <rect x="490" y="332" width="380" height="14" rx="7" fill="#1e293b"/>
+    <rect x="490" y="358" width="330" height="14" rx="7" fill="#1e293b"/>
+
+    <circle cx="560" cy="430" r="34" fill="#006241"/>
+    <polygon points="550,414 550,446 576,430" fill="#e5e7eb"/>
+  </g>
+
+  <g>
+    <rect x="460" y="510" width="490" height="90" rx="16" fill="#111827" stroke="#475569"/>
+    <text x="500" y="566" fill="#d1d5db" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="700">FESPACO</text>
+    <text x="700" y="566" fill="#86efac" font-family="Arial, Helvetica, sans-serif" font-size="20">Cinéma africain en lumière</text>
+  </g>
+
+  <text x="220" y="705" fill="#9ca3af" font-family="Arial, Helvetica, sans-serif" font-size="26">Illustration de contact • Festival panafricain du cinéma</text>
+</svg>

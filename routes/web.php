@@ -11,6 +11,7 @@ use App\Http\Controllers\RealisateurController;
 use App\Http\Controllers\ActeurController;
 use App\Http\Controllers\ProjectionController;
 use App\Http\Controllers\ActualiteController;
+use App\Http\Controllers\Admin\ContactMessageController;
 
 // --- Routes publiques ---
 Route::get('/', [PublicController::class, 'home'])->name('public.home');
@@ -27,6 +28,7 @@ Route::get('/galerie', [GalerieController::class, 'publicIndex'])->name('galerie
 Route::get('/galerie/{galerie}', [GalerieController::class, 'show'])->name('galerie.show');
 Route::get('/a-propos', [PublicController::class, 'aPropos'])->name('public.a_propos');
 Route::get('/contact', [PublicController::class, 'contact'])->name('public.contact');
+Route::post('/contact', [PublicController::class, 'sendContact'])->name('public.contact.send');
 
 // --- Routes admin (auth + admin) ---
 Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.')->group(function () {
@@ -36,12 +38,19 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::resource('realisateurs', RealisateurController::class);
     Route::resource('acteurs', ActeurController::class);
     Route::resource('projections', ProjectionController::class);
+    Route::get('messages', [ContactMessageController::class, 'index'])->name('messages.index');
+    Route::get('messages/{contactMessage}', [ContactMessageController::class, 'show'])->name('messages.show');
+    Route::post('messages/{contactMessage}/read', [ContactMessageController::class, 'markRead'])->name('messages.read');
+    Route::delete('messages/{contactMessage}', [ContactMessageController::class, 'destroy'])->name('messages.destroy');
     Route::get('galeries/{galerie}/play', [GalerieController::class, 'play'])->name('galeries.play');
     Route::resource('galeries', GalerieController::class)->parameters([
         'galeries' => 'galerie',
     ]);
     Route::post('projections/{projection}/demarrer', [ProjectionController::class, 'demarrer'])->name('projections.demarrer');
     Route::post('projections/{projection}/arreter',  [ProjectionController::class, 'arreter'])->name('projections.arreter');
+    
+    // API endpoints for AJAX requests
+    Route::get('api/films/{film}/medias', [FilmController::class, 'mediaList'])->name('films.media_list');
 });
 
 

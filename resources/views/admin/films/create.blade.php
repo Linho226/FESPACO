@@ -106,11 +106,7 @@
                     @error('pays') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
 
-                <div class="col-12 col-md-4">
-                    <label for="duree" class="form-label">Durée (minutes) <span class="text-danger">*</span></label>
-                    <input type="number" min="1" class="form-control @error('duree') is-invalid @enderror" id="duree" name="duree" value="{{ old('duree') }}" required>
-                    @error('duree') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                </div>
+
 
                 <div class="col-12 col-md-4">
                     <label for="categorie" class="form-label">Catégorie <span class="text-danger">*</span></label>

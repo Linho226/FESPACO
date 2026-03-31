@@ -16,15 +16,14 @@ class ProjectionController extends Controller
      */
     public function index(Request $request): View
     {
-        // Charge le film lié pour lister le programme sans requêtes N+1.
-        $query = Projection::with('film')->orderBy('date')->orderBy('heure');
+        // Charge le film et ses galeries (médias) pour éviter les N+1 queries.
+        $query = Projection::with('film.galeries')->orderBy('date')->orderBy('heure');
 
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function($q) use ($search) {
                 $q->whereHas('film', fn($q) => $q->where('titre', 'like', "%$search%"))
-                  ->orWhere('lieu', 'like', "%$search%")
-                  ->orWhere('salle', 'like', "%$search%");
+                  ->orWhere('lieu', 'like', "%$search%");
             });
         }
 
@@ -35,7 +34,7 @@ class ProjectionController extends Controller
         $projections = $query->paginate(15);
 
         // Projections imminentes (dans moins de 24h) et en cours
-        $alertes = Projection::with('film')
+        $alertes = Projection::with('film.galeries')
             ->get()
             ->filter(fn($p) => $p->approcheImminente() || $p->estEnCours());
 
@@ -60,21 +59,27 @@ class ProjectionController extends Controller
             'film_id' => 'required|exists:films,id',
             'date'    => 'required|date',
             'heure'   => 'required|date_format:H:i',
-            'salle'   => 'required|string|max:100',
             'lieu'    => 'required|string|max:255',
             'notes'   => 'nullable|string',
             'publie'  => 'boolean',
+            'media_selection_mode' => 'nullable|in:all,specific',
+            'selected_media_ids'   => 'nullable|array',
+            'selected_media_ids.*' => 'integer|exists:galeries,id',
         ]);
 
         // Normalise la checkbox en booléen fiable (true/false).
         $validated['publie'] = $request->boolean('publie');
+        $validated['salle'] = 'Direct';
+
+        // Traite la sélection des médias
+        $this->processMediaSelection($validated);
 
         // Empêche deux projections qui se chevauchent dans la même salle.
         if ($conflit = $this->detectConflitSalle($validated)) {
             return back()
                 ->withInput()
                 ->withErrors([
-                    'salle' => "Conflit de programmation : la salle est déjà occupée par « {$conflit->film->titre} » sur ce créneau.",
+                    'heure' => "Conflit de programmation : une diffusion « {$conflit->film->titre} » occupe déjà ce créneau.",
                 ]);
         }
 
@@ -102,20 +107,26 @@ class ProjectionController extends Controller
             'film_id' => 'required|exists:films,id',
             'date'    => 'required|date',
             'heure'   => 'required|date_format:H:i',
-            'salle'   => 'required|string|max:100',
             'lieu'    => 'required|string|max:255',
             'notes'   => 'nullable|string',
             'publie'  => 'boolean',
+            'media_selection_mode' => 'nullable|in:all,specific',
+            'selected_media_ids'   => 'nullable|array',
+            'selected_media_ids.*' => 'integer|exists:galeries,id',
         ]);
 
         $validated['publie'] = $request->boolean('publie');
+        $validated['salle'] = 'Direct';
+
+        // Traite la sélection des médias
+        $this->processMediaSelection($validated);
 
         // Ignore la projection courante lors du contrôle de conflit en édition.
         if ($conflit = $this->detectConflitSalle($validated, $projection->id)) {
             return back()
                 ->withInput()
                 ->withErrors([
-                    'salle' => "Conflit de programmation : la salle est déjà occupée par « {$conflit->film->titre} » sur ce créneau.",
+                    'heure' => "Conflit de programmation : une diffusion « {$conflit->film->titre} » occupe déjà ce créneau.",
                 ]);
         }
 
@@ -204,14 +215,13 @@ class ProjectionController extends Controller
     {
         // Calcule l'intervalle horaire de la projection à créer/modifier.
         $film = Film::find($data['film_id']);
-        $dureeCourante = max((int) ($film?->duree ?? 0), 1);
+        $dureeCouranteSecondes = $film ? $film->dureeSecondesReelle() : 60;
 
         $debutCourant = Carbon::parse($data['date'].' '.$data['heure']);
-        $finCourante = $debutCourant->copy()->addMinutes($dureeCourante);
+        $finCourante = $debutCourant->copy()->addSeconds($dureeCouranteSecondes);
 
         $query = Projection::with('film')
-            ->whereDate('date', $data['date'])
-            ->whereRaw('LOWER(salle) = ?', [mb_strtolower(trim($data['salle']))]);
+            ->whereDate('date', $data['date']);
 
         if ($excludeId) {
             $query->where('id', '!=', $excludeId);
@@ -220,9 +230,9 @@ class ProjectionController extends Controller
         $existantes = $query->get();
 
         foreach ($existantes as $projection) {
-            $dureeExistante = max((int) ($projection->film->duree ?? 0), 1);
+            $dureeExistanteSecondes = $projection->film ? $projection->film->dureeSecondesReelle() : 60;
             $debutExistant = $projection->dateHeure();
-            $finExistante = $debutExistant->copy()->addMinutes($dureeExistante);
+            $finExistante = $debutExistant->copy()->addSeconds($dureeExistanteSecondes);
 
             // Chevauchement strict entre deux intervalles [debut, fin).
             $overlap = $debutCourant->lt($finExistante) && $finCourante->gt($debutExistant);
@@ -234,4 +244,47 @@ class ProjectionController extends Controller
 
         return null;
     }
+
+    /**
+     * Process media selection: convert from form data to database format.
+     * If film has multiple media:
+     *   - Mode 'all': stores all media in order (selected_media_ids = null, mode = 'all')
+     *   - Mode 'specific': stores only selected media (selected_media_ids = array, mode = 'specific')
+     * If film has 1 media: defaults to 'all' (no selection needed)
+     */
+    private function processMediaSelection(array &$data): void
+    {
+        $film = Film::find($data['film_id']);
+        if (!$film) {
+            $data['media_selection_mode'] = 'all';
+            $data['selected_media_ids'] = null;
+            return;
+        }
+
+        $mediaCount = $film->galeries()->count();
+
+        // If only 1 media or none, default to 'all'
+        if ($mediaCount < 2) {
+            $data['media_selection_mode'] = 'all';
+            $data['selected_media_ids'] = null;
+            return;
+        }
+
+        // Multiple media exist
+        $mode = $data['media_selection_mode'] ?? 'all';
+        $data['media_selection_mode'] = in_array($mode, ['all', 'specific']) ? $mode : 'all';
+
+        if ($mode === 'all') {
+            // Store all media IDs in order  
+            $allMediaIds = $film->galeries()
+                ->orderBy('created_at', 'desc')
+                ->pluck('id')
+                ->toArray();
+            $data['selected_media_ids'] = $allMediaIds;
+        } else {
+            // Store selected media IDs as provided
+            $data['selected_media_ids'] = $data['selected_media_ids'] ?? [];
+        }
+    }
 }
+

@@ -24,13 +24,43 @@
             <select name="film_id" id="film_id" class="form-select @error('film_id') is-invalid @enderror" required>
                 <option value="">— Sélectionner un film —</option>
                 @foreach($films as $film)
-                    <option value="{{ $film->id }}" data-duree="{{ $film->duree ?? '' }}" {{ old('film_id') == $film->id ? 'selected' : '' }}>
+                    <option value="{{ $film->id }}" data-duree-secondes="{{ $film->dureeSecondesReelle() }}" {{ old('film_id') == $film->id ? 'selected' : '' }}>
                         {{ $film->titre }} ({{ $film->annee_production }})
                     </option>
                 @endforeach
             </select>
             @error('film_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
             <small id="film_duree_info" class="text-muted d-block mt-2"></small>
+        </div>
+
+        <!-- Section de sélection des médias (apparaît après sélection d'un film avec 2+ médias) -->
+        <div id="media_selection_section" class="mb-4" style="display: none; border: 1px solid #dee2e6; border-radius: 0.375rem; padding: 1rem; background-color: #f8f9fa;">
+            <label class="form-label fw-bold mb-3">Mode de diffusion des vidéos</label>
+
+            <div class="mb-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="media_selection_mode" 
+                        id="media_mode_all" value="all" checked="">
+                    <label class="form-check-label" for="media_mode_all">
+                        Diffuser tous les médias dans l'ordre d'ajout
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="media_selection_mode" 
+                        id="media_mode_specific" value="specific">
+                    <label class="form-check-label" for="media_mode_specific">
+                        Sélectionner des médias spécifiques
+                    </label>
+                </div>
+            </div>
+
+            <!-- Checkboxes pour mode 'specific' -->
+            <div id="media_checkboxes_container" style="display: none; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #dee2e6;">
+                <label class="form-label fw-bold d-block mb-2">Choisir les vidéos à diffuser :</label>
+                <div id="media_list" class="list-group"></div>
+            </div>
+
+            <small class="text-muted d-block mt-3" id="media_count_info"></small>
         </div>
 
         <div class="row">
@@ -48,14 +78,6 @@
                     value="{{ old('heure') }}" required>
                 @error('heure')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
-        </div>
-
-        <div class="mb-3">
-            <label for="salle" class="form-label fw-bold">Salle <span class="text-danger">*</span></label>
-            <input type="text" name="salle" id="salle"
-                class="form-control @error('salle') is-invalid @enderror"
-                value="{{ old('salle') }}" placeholder="Ex: Salle 1, Cinéma Burkina..." required>
-            @error('salle')<div class="invalid-feedback">{{ $message }}</div>@enderror
         </div>
 
         <div class="mb-3">
@@ -99,20 +121,107 @@
     (function () {
         const filmSelect = document.getElementById('film_id');
         const dureeInfo = document.getElementById('film_duree_info');
+        const mediaSelectionSection = document.getElementById('media_selection_section');
+        const mediaModeRadios = document.querySelectorAll('input[name="media_selection_mode"]');
+        const mediaCheckboxesContainer = document.getElementById('media_checkboxes_container');
+        const mediaList = document.getElementById('media_list');
+        const mediaCountInfo = document.getElementById('media_count_info');
+
+        function formatDuree(secondes) {
+            const total = Number(secondes || 0);
+            if (!total || total <= 0) return null;
+
+            const h = Math.floor(total / 3600);
+            const m = Math.floor((total % 3600) / 60);
+            const s = total % 60;
+
+            if (h > 0) {
+                return s > 0 ? `${h}h${m}min${s}s` : `${h}h${m}`;
+            }
+
+            return s > 0 ? `${m}min${s}s` : `${m}min`;
+        }
 
         function updateDureeInfo() {
             if (!filmSelect || !dureeInfo) return;
             const selected = filmSelect.options[filmSelect.selectedIndex];
-            const duree = selected ? selected.getAttribute('data-duree') : null;
+            const dureeSecondes = selected ? selected.getAttribute('data-duree-secondes') : null;
+            const label = formatDuree(dureeSecondes);
 
-            if (duree) {
-                dureeInfo.textContent = `Durée du film sélectionné : ${duree} min`;
+            if (label) {
+                dureeInfo.textContent = `Durée du film sélectionné : ${label}`;
             } else {
                 dureeInfo.textContent = 'Durée du film non renseignée.';
             }
         }
 
-        filmSelect?.addEventListener('change', updateDureeInfo);
+        // Fetch media list for the selected film
+        async function loadMediaForFilm(filmId) {
+            if (!filmId) {
+                mediaSelectionSection.style.display = 'none';
+                return;
+            }
+
+            try {
+                const response = await fetch(`/admin/api/films/${filmId}/medias`);
+                const medias = await response.json();
+
+                // Si moins de 2 médias, ne pas afficher la section
+                if (medias.length < 2) {
+                    mediaSelectionSection.style.display = 'none';
+                    mediaCountInfo.textContent = '';
+                    return;
+                }
+
+                // Afficher la section
+                mediaSelectionSection.style.display = 'block';
+                mediaCountInfo.textContent = `Ce film a ${medias.length} vidéos disponibles.`;
+
+                // Remplir la liste des checkboxes
+                mediaList.innerHTML = '';
+                medias.forEach(media => {
+                    const checkboxId = `media_${media.id}`;
+                    const durationLabel = media.duree_secondes ? ` (${formatDuree(media.duree_secondes)})` : '';
+                    
+                    const div = document.createElement('div');
+                    div.className = 'list-group-item';
+                    div.innerHTML = `
+                        <div class="form-check">
+                            <input class="form-check-input media-checkbox" type="checkbox" 
+                                name="selected_media_ids[]" value="${media.id}" id="${checkboxId}">
+                            <label class="form-check-label" for="${checkboxId}">
+                                ${media.titre}${durationLabel}
+                            </label>
+                        </div>
+                    `;
+                    mediaList.appendChild(div);
+                });
+
+                // Reset les radios et checkboxes à la sélection par défaut (all)
+                document.getElementById('media_mode_all').checked = true;
+                mediaCheckboxesContainer.style.display = 'none';
+            } catch (err) {
+                console.error('Error loading media:', err);
+                mediaSelectionSection.style.display = 'none';
+            }
+        }
+
+        // Toggle checkboxes visibility based on mode selection
+        mediaModeRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                if (this.value === 'specific') {
+                    mediaCheckboxesContainer.style.display = 'block';
+                } else {
+                    mediaCheckboxesContainer.style.display = 'none';
+                }
+            });
+        });
+
+        filmSelect?.addEventListener('change', function() {
+            updateDureeInfo();
+            loadMediaForFilm(this.value);
+        });
+
         updateDureeInfo();
     })();
 </script>

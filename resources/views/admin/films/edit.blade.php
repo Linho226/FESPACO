@@ -54,9 +54,24 @@
                 </div>
 
                 <div class="col-12 col-md-4">
-                    <label for="duree" class="form-label">Durée (minutes) <span class="text-danger">*</span></label>
-                    <input type="number" min="1" class="form-control @error('duree') is-invalid @enderror" id="duree" name="duree" value="{{ old('duree', $film->duree) }}" required>
-                    @error('duree') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    @php
+                        $mediaVideo = $film->galeries()->where('type_media', 'video')->whereNotNull('duree_secondes')->orderByDesc('created_at')->first();
+                        $dureeMedia = $mediaVideo?->duree_secondes ?? 0;
+                    @endphp
+                    <label class="form-label">Durée</label>
+                    @if($dureeMedia > 0)
+                        @php
+                            $h = intdiv($dureeMedia, 3600);
+                            $m = intdiv($dureeMedia % 3600, 60);
+                            $s = $dureeMedia % 60;
+                        @endphp
+                        <div class="form-control-plaintext text-success fw-semibold">
+                            {{ $h > 0 ? $h.'h ' : '' }}{{ str_pad($m, 2, '0', STR_PAD_LEFT) }}min {{ str_pad($s, 2, '0', STR_PAD_LEFT) }}s
+                        </div>
+                        <small class="text-muted">Calculée automatiquement depuis le média vidéo.</small>
+                    @else
+                        <div class="form-control-plaintext text-muted fst-italic">Non renseignée — sera définie lors de l'ajout d'une vidéo.</div>
+                    @endif
                 </div>
 
                 <div class="col-12 col-md-4">

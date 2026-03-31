@@ -6,145 +6,426 @@
     <title>Projections - FESPACO</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background: #f4f6f9; }
-        .projection-card { border: none; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,.08); }
+        :root {
+            --primary: #006241;
+            --success: #10b981;
+        }
+        
+        * { box-sizing: border-box; }
+        body { 
+            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 100%);
+            color: #f0f0f0;
+            min-height: 100vh;
+        }
+        
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff, #d0d0d0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+        
+        .page-subtitle {
+            color: rgba(255,255,255,.6);
+            font-size: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .badge-count {
+            background: var(--primary);
+            color: white;
+            padding: 0.6rem 1.2rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .filter-card {
+            background: rgba(255,255,255,.02);
+            border: 1px solid rgba(255,255,255,.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+            margin-bottom: 2rem;
+        }
+        
+        .filter-card .form-control,
+        .filter-card .form-select {
+            background: rgba(255,255,255,.05);
+            border-color: rgba(255,255,255,.1);
+            color: #f0f0f0;
+            border-radius: 8px;
+        }
+        
+        .filter-card .form-control:focus,
+        .filter-card .form-select:focus {
+            background: rgba(255,255,255,.08);
+            border-color: var(--primary);
+            color: #f0f0f0;
+            box-shadow: 0 0 0 0.2rem rgba(0, 98, 65, .2);
+        }
+        
+        .filter-card .form-control::placeholder,
+        .filter-card .form-select option {
+            color: rgba(255,255,255,.5);
+        }
+        
+        .btn-filter {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+            font-weight: 600;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-filter:hover {
+            background: #00582f;
+            border-color: #00582f;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 98, 65, .3);
+        }
+        
+        .btn-filter-reset {
+            background: rgba(255,255,255,.1);
+            border-color: rgba(255,255,255,.2);
+            color: #f0f0f0;
+            font-weight: 600;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-filter-reset:hover {
+            background: rgba(255,255,255,.15);
+            border-color: rgba(255,255,255,.3);
+        }
+        
+        .reco-section {
+            background: rgba(255,255,255,.02);
+            border: 1px solid rgba(255,255,255,.1);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+        }
+        
+        .reco-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: #ff6b6b;
+        }
+        
+        .projection-card {
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            border: none;
+            border-radius: 14px;
+            background: rgba(255,255,255,.02);
+            border: 1px solid rgba(255,255,255,.1);
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+        }
+        
+        .projection-card:hover {
+            background: rgba(0, 98, 65, .05);
+            border-color: rgba(0, 98, 65, .3);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 98, 65, .2);
+        }
+        
+        .projection-card .card-body {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+        
+        .projection-card .card-title {
+            color: #fff;
+            font-weight: 700;
+            font-size: 1.15rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .projection-card .location-text {
+            color: rgba(255,255,255,.6);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .projection-card .time-text {
+            color: rgba(255,255,255,.7);
+            font-size: 0.85rem;
+        }
+        
+        .projection-card .card-footer {
+            background: transparent;
+            border-top: 1px solid rgba(255,255,255,.1);
+            padding-top: 1rem;
+            margin-top: auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .status-badge {
+            font-weight: 600;
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+        }
+        
+        .btn-watch {
+            background: var(--primary);
+            color: white;
+            border: none;
+            font-weight: 600;
+            border-radius: 8px;
+            padding: 0.6rem 1.2rem;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-watch:hover {
+            background: #00582f;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 98, 65, .3);
+            color: white;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            background: rgba(255,255,255,.02);
+            border: 1px solid rgba(255,255,255,.1);
+            border-radius: 14px;
+            color: rgba(255,255,255,.6);
+        }
+        
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        @media (prefers-color-scheme: light) {
+            body {
+                background: linear-gradient(135deg, #f4f7fb 0%, #e9eff7 100%);
+                color: #1f2937;
+            }
+
+            .page-title {
+                background: none;
+                color: #111827;
+                -webkit-text-fill-color: #111827;
+            }
+
+            .page-subtitle {
+                color: rgba(31, 41, 55, .7);
+            }
+
+            .reco-title {
+                color: #d43f3f;
+            }
+
+            .filter-card,
+            .reco-section,
+            .projection-card,
+            .empty-state {
+                background: rgba(255,255,255,.88);
+                border-color: rgba(15, 23, 42, .12);
+                box-shadow: 0 10px 24px rgba(15, 23, 42, .06);
+            }
+
+            .filter-card .form-control,
+            .filter-card .form-select {
+                background: #ffffff;
+                border-color: rgba(15, 23, 42, .18);
+                color: #111827;
+            }
+
+            .filter-card .form-control:focus,
+            .filter-card .form-select:focus {
+                background: #ffffff;
+                color: #111827;
+            }
+
+            .filter-card .form-control::placeholder,
+            .filter-card .form-select option {
+                color: rgba(31, 41, 55, .55);
+            }
+
+            .btn-filter-reset {
+                background: rgba(15, 23, 42, .08);
+                border-color: rgba(15, 23, 42, .18);
+                color: #1f2937;
+            }
+
+            .btn-filter-reset:hover {
+                background: rgba(15, 23, 42, .14);
+                border-color: rgba(15, 23, 42, .22);
+            }
+
+            .projection-card .card-title,
+            .projection-card .location-text,
+            .projection-card .time-text,
+            .empty-state {
+                color: #1f2937;
+            }
+
+            .projection-card .time-text strong,
+            .projection-card .text-muted,
+            .text-muted {
+                color: #475569 !important;
+            }
+
+            .projection-card .card-footer {
+                border-top-color: rgba(15, 23, 42, .1);
+            }
+        }
+
     </style>
 </head>
 <body>
     @include('public.navbar')
-    <div class="container py-5">
-        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-            <h1 class="mb-0">Projections publiques</h1>
-            <span class="badge bg-dark">{{ $projections->count() }} projection(s)</span>
+    
+    <div class="container py-4 py-md-5">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+            <div>
+                <h1 class="page-title">Projections en direct</h1>
+                <p class="page-subtitle">Découvrez nos séances et regardez en ligne</p>
+            </div>
+            <span class="badge-count">{{ $projections->count() }} séance(s)</span>
         </div>
-        <p class="text-muted mb-4">Choisissez selon vos envies, l'état de diffusion et la salle.</p>
 
         @if(session('warning'))
-            <div class="alert alert-warning">
+            <div class="alert alert-warning alert-dismissible fade show" role="alert" style="border-radius: 12px; border: 1px solid rgba(255,193,7,.3); background: rgba(255,193,7,.05);">
                 {{ session('warning') }}
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
             </div>
         @endif
 
-        @if($recommandees->isNotEmpty())
-            <div class="card border-0 shadow-sm mb-4" style="border-radius:12px;">
-                <div class="card-body">
-                    <h5 class="mb-3">🔥 Recommandé maintenant</h5>
-                    <div class="row g-3">
-                        @foreach($recommandees as $projection)
-                            @php
-                                $etatReco = $projection->etat();
-                                $minutesAvant = now()->diffInMinutes($projection->dateHeure(), false);
-                            @endphp
-                            <div class="col-md-4">
-                                <div class="p-3 rounded border h-100 bg-white">
-                                    <div class="d-flex justify-content-between align-items-start">
-                                        <strong>{{ $projection->film->titre ?? 'Film' }}</strong>
-                                        <span class="badge bg-{{ $etatReco['badge'] }}">{{ $etatReco['label'] }}</span>
-                                    </div>
-                                    <div class="small text-muted mt-2">
-                                        {{ $projection->salle }} • {{ $projection->lieu }}
-                                    </div>
-                                    <div class="small mt-2">
-                                        {{ $projection->date->format('d/m/Y') }} à {{ \Carbon\Carbon::parse($projection->heure)->format('H\\hi') }}
-                                    </div>
+        <!-- Filtres -->
+        <div class="filter-card">
+            <form method="GET" action="{{ route('public.projections') }}" class="row g-2">
+                <div class="col-md-3">
+                    <input type="text" name="q" class="form-control" placeholder="Film, lieu..."
+                        value="{{ request('q') }}">
+                </div>
+                <div class="col-md-2">
+                    <input type="date" name="date" class="form-control" value="{{ request('date') }}">
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" name="etat">
+                        <option value="tous" {{ request('etat', 'tous') === 'tous' ? 'selected' : '' }}>Tous les états</option>
+                        <option value="en_cours" {{ request('etat') === 'en_cours' ? 'selected' : '' }}>En cours</option>
+                        <option value="a_venir" {{ request('etat') === 'a_venir' ? 'selected' : '' }}>À venir</option>
+                        <option value="arretee" {{ request('etat') === 'arretee' ? 'selected' : '' }}>En pause</option>
+                        <option value="terminee" {{ request('etat') === 'terminee' ? 'selected' : '' }}>Terminée</option>
+                    </select>
+                </div>
+                <div class="col-md-5 d-flex gap-2">
+                    <button type="submit" class="btn btn-filter flex-grow-1">🔍 Filtrer</button>
+                    <a href="{{ route('public.projections') }}" class="btn btn-filter-reset flex-grow-1">↻ Réinitialiser</a>
+                </div>
+            </form>
+        </div>
+
+        @if($topProjections->isNotEmpty())
+            <div class="reco-section">
+                <h5 class="reco-title">🔥 À regarder maintenant</h5>
+                <div class="row g-3">
+                    @foreach($topProjections as $projection)
+                        @php
+                            $etatReco = $projection->etat();
+                            $minutesAvant = now()->diffInMinutes($projection->dateHeure(), false);
+                        @endphp
+                        <div class="col-md-4">
+                            <div class="projection-card">
+                                <div class="card-body">
+                                    <h6 class="projection-card .card-title">{{ $projection->getTitreAffiche() }}</h6>
+                                    <p class="location-text">
+                                        📍 {{ $projection->lieu }}
+                                    </p>
+                                    <p class="time-text">
+                                        📅 {{ $projection->date->format('d/m/Y') }} à {{ \Carbon\Carbon::parse($projection->heure)->format('H\hi') }}
+                                    </p>
                                     @if($projection->estAVenir())
-                                        <div class="small text-primary mt-1">
-                                            Dans {{ max(0, intdiv($minutesAvant, 60)) }}h{{ $minutesAvant % 60 }}min
-                                        </div>
+                                        <p class="text-success small"><strong>⏱️ Prochaine dans {{ max(0, intdiv($minutesAvant, 60)) }}h{{ $minutesAvant % 60 }}min</strong></p>
                                     @elseif($projection->estEnCours())
-                                        <div class="small text-success mt-1">En cours de diffusion</div>
-                                    @endif
-                                    @if(($projection->film?->galeries?->count() ?? 0) > 0)
-                                        <a class="btn btn-sm btn-outline-primary mt-2"
-                                           href="{{ route('public.projections.visionner', $projection) }}">
-                                            Regarder cette séance
-                                        </a>
-                                    @else
-                                        <div class="alert alert-warning py-2 px-3 mt-2 mb-0 small" role="alert">
-                                            Cette séance n’a pas encore de vidéo disponible.
-                                        </div>
+                                        <p class="text-success small"><strong>🔴 En direct</strong></p>
                                     @endif
                                 </div>
+                                <div class="card-footer">
+                                    @if(($projection->film?->galeries?->count() ?? 0) > 0)
+                                        <a href="{{ route('public.projections.visionner', $projection) }}" class="btn-watch">Regarder</a>
+                                    @else
+                                        <span class="text-muted small">Pas de vidéo</span>
+                                    @endif
+                                    <span class="status-badge bg-{{ $etatReco['badge'] }}">{{ $etatReco['label'] }}</span>
+                                </div>
                             </div>
-                        @endforeach
-                    </div>
+                        </div>
+                    @endforeach
                 </div>
             </div>
         @endif
 
-        <form method="GET" action="{{ route('public.projections') }}" class="row g-2 mb-4">
-            <div class="col-md-4">
-                <input type="text" class="form-control" name="q" value="{{ request('q') }}" placeholder="Film, salle, lieu...">
-            </div>
-            <div class="col-md-2">
-                <input type="date" class="form-control" name="date" value="{{ request('date') }}">
-            </div>
-            <div class="col-md-2">
-                <select class="form-select" name="salle">
-                    <option value="">Toutes les salles</option>
-                    @foreach($salles as $salle)
-                        <option value="{{ $salle }}" {{ request('salle') === $salle ? 'selected' : '' }}>{{ $salle }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="col-md-2">
-                <select class="form-select" name="etat">
-                    <option value="tous" {{ request('etat', 'tous') === 'tous' ? 'selected' : '' }}>Tous</option>
-                    <option value="en_cours" {{ request('etat') === 'en_cours' ? 'selected' : '' }}>En cours</option>
-                    <option value="a_venir" {{ request('etat') === 'a_venir' ? 'selected' : '' }}>À venir</option>
-                    <option value="arretee" {{ request('etat') === 'arretee' ? 'selected' : '' }}>En pause</option>
-                    <option value="terminee" {{ request('etat') === 'terminee' ? 'selected' : '' }}>Terminée</option>
-                </select>
-            </div>
-            <div class="col-md-2 d-flex gap-2">
-                <button class="btn btn-primary w-100" type="submit">Filtrer</button>
-                <a class="btn btn-outline-secondary w-100" href="{{ route('public.projections') }}">Reset</a>
-            </div>
-        </form>
-
+        <!-- Programme -->
         @if($projections->isEmpty())
-            <div class="alert alert-info">Aucune projection ne correspond à vos critères.</div>
-        @else
+            <div class="empty-state">
+                <div class="empty-state-icon">🎬</div>
+                <h5>Aucune projection ne correspond à vos critères</h5>
+                <p class="mb-0">Essayez d'ajuster vos filtres ou consultez toutes les séances.</p>
+            </div>
+        @elseif($projectionsProgramme->isNotEmpty())
+            <h5 class="reco-title" style="color: #e8e8e8;">Programme complet</h5>
             <div class="row g-3" id="programme">
-                @foreach($projections as $projection)
+                @foreach($projectionsProgramme as $projection)
                     @php
                         $etatItem = $projection->etat();
-                        $duree = (int) ($projection->film->duree ?? 0);
-                        $finPrevue = $projection->finPrevue()->format('H\\hi');
+                        $dureeSecondes = $projection->dureeProjectionSecondes();
+                        $finPrevue = $projection->finPrevue()->format('H\\hi:s');
+                        $minutesAvantSalle = now()->diffInMinutes($projection->dateHeure(), false);
                     @endphp
                     <div class="col-md-6 col-lg-4" id="projection-{{ $projection->id }}">
-                        <div class="card projection-card h-100">
+                        <a href="{{ route('public.projections.visionner', $projection) }}" class="projection-card" style="text-decoration: none;">
                             <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-start mb-2">
-                                    <h5 class="card-title mb-0">{{ $projection->film->titre ?? 'Film' }}</h5>
-                                    <span class="badge bg-{{ $etatItem['badge'] }}">{{ $etatItem['icon'] }} {{ $etatItem['label'] }}</span>
-                                </div>
-                                <p class="text-muted mb-2">{{ $projection->lieu }} • {{ $projection->salle }}</p>
-                                <ul class="list-unstyled small mb-0">
-                                    <li><strong>Date :</strong> {{ $projection->date->format('d/m/Y') }}</li>
-                                    <li><strong>Début :</strong> {{ \Carbon\Carbon::parse($projection->heure)->format('H\\hi') }}</li>
-                                    <li><strong>Durée :</strong> {{ $duree > 0 ? $duree.' min' : 'Non renseignée' }}</li>
-                                    <li><strong>Fin prévue :</strong> {{ $finPrevue }}</li>
-                                </ul>
-                            </div>
-                            <div class="card-footer bg-white border-0 pt-0">
-                                @if($projection->notes)
-                                    <small class="text-muted">{{ $projection->notes }}</small>
+                                <h6 class="card-title">{{ $projection->getTitreAffiche() }}</h6>
+                                <p class="location-text">📍 {{ $projection->lieu }}</p>
+                                <p class="time-text">
+                                    <strong>📅 {{ $projection->date->format('d/m/Y') }}</strong>
+                                </p>
+                                <p class="time-text">
+                                    ⏰ {{ \Carbon\Carbon::parse($projection->heure)->format('H\hi') }} 
+                                    (durée: {{ $dureeSecondes > 0 ? \App\Models\Film::formatterDureeSecondes($dureeSecondes) : 'non renseignée' }})
+                                </p>
+                                @if($projection->estAVenir())
+                                    <p class="text-success small mb-2"><strong>⏱️ Prochaine dans {{ max(0, intdiv($minutesAvantSalle, 60)) }}h{{ $minutesAvantSalle % 60 }}min</strong></p>
                                 @endif
-                                <div class="mt-2">
-                                    @if(($projection->film?->galeries?->count() ?? 0) > 0)
-                                        <a class="btn btn-sm btn-primary"
-                                           href="{{ route('public.projections.visionner', $projection) }}">
-                                            Regarder cette séance
-                                        </a>
-                                    @else
-                                        <div class="alert alert-warning py-2 px-3 mb-0 small" role="alert">
-                                            Cette séance n’a pas encore de vidéo disponible.
-                                        </div>
-                                    @endif
-                                </div>
+                                <p class="time-text">
+                                    🏁 Fin: <strong>{{ $finPrevue }}</strong>
+                                </p>
+                                @if($projection->notes)
+                                    <p class="text-muted small mb-0">📝 {{ $projection->notes }}</p>
+                                @endif
                             </div>
-                        </div>
+                            <div class="card-footer">
+                                @if(($projection->film?->galeries?->count() ?? 0) > 0)
+                                    <span class="btn-watch text-center w-100" style="margin: 0;">Regarder</span>
+                                @else
+                                    <span class="text-muted small">⏳ Pas de vidéo</span>
+                                @endif
+                                <span class="status-badge bg-{{ $etatItem['badge'] }}">{{ $etatItem['label'] }}</span>
+                            </div>
+                        </a>
                     </div>
                 @endforeach
             </div>

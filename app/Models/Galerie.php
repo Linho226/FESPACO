@@ -19,6 +19,7 @@ class Galerie extends Model
         'type_media',
         'fichier',
         'lien',
+        'duree_secondes',
         'description',
         'date',
     ];

@@ -105,11 +105,25 @@ class FilmController extends Controller
             'description'      => 'nullable|string',
             'annee_production'  => 'required|integer|min:1900|max:'.(date('Y') + 1),
             'pays'             => 'required|string|max:100',
-            'duree'            => 'required|integer|min:1',
+            'duree'            => 'nullable|integer|min:1',
             'realisateur'      => 'required|string|max:255',
             'acteurs'          => 'required|string',
             'categorie'        => 'required|string|max:100',
             'affiche'          => 'nullable|image|max:4096',
         ]);
+    }
+
+    /**
+     * API endpoint: Return media list for a film (JSON)
+     * Used by AJAX in projection form to populate media selection
+     */
+    public function mediaList(Film $film)
+    {
+        $medias = $film->galeries()
+            ->orderBy('created_at', 'desc')
+            ->get(['id', 'titre', 'duree_secondes'])
+            ->toArray();
+        
+        return response()->json($medias);
     }
 }

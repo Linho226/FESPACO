@@ -19,6 +19,9 @@ class Projection extends Model
         'debut_at',
         'fin_at',
         'pause_total_seconds',
+        'media_id',
+        'media_selection_mode',
+        'selected_media_ids',
     ];
 
     protected $casts = [
@@ -27,6 +30,7 @@ class Projection extends Model
         'debut_at' => 'datetime',
         'fin_at'   => 'datetime',
         'pause_total_seconds' => 'integer',
+        'selected_media_ids' => 'array',
     ];
 
     public function film(): BelongsTo
@@ -43,22 +47,84 @@ class Projection extends Model
     /** Fin théorique selon l'heure de début et la durée du film. */
     public function finPrevue(): Carbon
     {
-        $duree = (int) ($this->film->duree ?? 0);
-        if ($duree <= 0) {
-            $duree = 180;
-        }
-
-        return $this->dateHeure()->copy()->addMinutes($duree);
+        return $this->dateHeure()->copy()->addSeconds($this->dureeProjectionSecondes());
     }
 
     public function dureeProjectionSecondes(): int
     {
-        $duree = (int) ($this->film->duree ?? 0);
-        if ($duree <= 0) {
-            $duree = 180;
+        // Si pas de sélection de médias, utiliser la durée du film entier
+        if (!$this->media_selection_mode || $this->media_selection_mode === 'all') {
+            return $this->film->dureeSecondesReelle();
         }
 
-        return $duree * 60;
+        // Mode 'specific': calculer la durée totale des médias sélectionnés
+        if (empty($this->selected_media_ids)) {
+            return 0;
+        }
+
+        $totalSeconds = 0;
+        
+        // Essayer de charger les galeries depuis la relation du film (optimisé en mémoire)
+        $galeries = $this->film?->galeries;
+        
+        if ($galeries) {
+            // Galeries sont déjà chargées
+            $galerieMap = $galeries->keyBy('id');
+            foreach ($this->selected_media_ids as $mediaId) {
+                if (isset($galerieMap[$mediaId]) && $galerieMap[$mediaId]->duree_secondes) {
+                    $totalSeconds += $galerieMap[$mediaId]->duree_secondes;
+                }
+            }
+        } else {
+            // Fallback: chercher dans la base de données
+            foreach ($this->selected_media_ids as $mediaId) {
+                $galerie = Galerie::find($mediaId);
+                if ($galerie && $galerie->duree_secondes) {
+                    $totalSeconds += $galerie->duree_secondes;
+                }
+            }
+        }
+
+        return $totalSeconds;
+    }
+
+    /**
+     * Récupère le titre à afficher pour la projection.
+     * Si mode 'specific' avec sélection, combine les titres des médias.
+     * Sinon, retourne le titre du film.
+     */
+    public function getTitreAffiche(): string
+    {
+        // Si pas de sélection spécifique, afficher le film
+        if (!$this->media_selection_mode || $this->media_selection_mode === 'all' || empty($this->selected_media_ids)) {
+            return $this->film->titre ?? 'Sans titre';
+        }
+
+        // Mode 'specific': afficher les titres des médias sélectionnés
+        $titres = [];
+        
+        // Essayer de charger les galeries depuis la relation du film (optimisé en mémoire)
+        $galeries = $this->film?->galeries;
+        
+        if ($galeries) {
+            // Galeries sont déjà chargées
+            $galerieMap = $galeries->keyBy('id');
+            foreach ($this->selected_media_ids as $mediaId) {
+                if (isset($galerieMap[$mediaId])) {
+                    $titres[] = $galerieMap[$mediaId]->titre;
+                }
+            }
+        } else {
+            // Fallback: chercher dans la base de données
+            foreach ($this->selected_media_ids as $mediaId) {
+                $galerie = Galerie::find($mediaId);
+                if ($galerie) {
+                    $titres[] = $galerie->titre;
+                }
+            }
+        }
+
+        return count($titres) > 0 ? implode(' + ', $titres) : ($this->film->titre ?? 'Sans titre');
     }
 
     public function referenceDebutReel(): ?Carbon

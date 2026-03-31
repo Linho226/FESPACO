@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Galerie;
 use App\Models\Film;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 
 class GalerieController extends Controller
@@ -39,8 +40,8 @@ class GalerieController extends Controller
             'film_id'     => 'nullable|exists:films,id',
             'titre'       => 'required|string|max:255',
             'type_media'  => 'required|in:video',
-            'fichier'     => 'required|file|mimes:mp4,avi,mov,webm|max:204800',
-            'lien'        => 'nullable|url',
+            'fichier'     => 'required_without:lien|nullable|file|mimes:jpeg,png,webp,mp4,avi,mov,webm|max:204800',
+            'lien'        => 'required_without:fichier|nullable|url',
             'description' => 'nullable|string',
             'date'        => 'required|date',
         ]);
@@ -61,11 +62,46 @@ class GalerieController extends Controller
             }
         }
 
+        // Tenter de récupérer la durée depuis un lien YouTube ou Vimeo
+        if (!$dureeSecondes && $request->filled('lien')) {
+            $lien = $validated['lien'];
+
+            // YouTube : youtu.be/ID ou youtube.com/watch?v=ID
+            if (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_\-]{11})/', $lien, $m)) {
+                try {
+                    $body = Http::timeout(5)
+                        ->withHeaders(['User-Agent' => 'Mozilla/5.0'])
+                        ->get('https://www.youtube.com/watch?v=' . $m[1])
+                        ->body();
+                    if (preg_match('/"lengthSeconds":"(\d+)"/', $body, $d)) {
+                        $dureeSecondes = (int) $d[1];
+                    }
+                } catch (\Exception $e) {}
+            }
+
+            // Vimeo : vimeo.com/ID
+            if (!$dureeSecondes && preg_match('/vimeo\.com\/(\d+)/', $lien, $m)) {
+                try {
+                    $data = Http::timeout(5)
+                        ->get('https://vimeo.com/api/v2/video/' . $m[1] . '.json')
+                        ->json();
+                    if (!empty($data[0]['duration'])) {
+                        $dureeSecondes = (int) $data[0]['duration'];
+                    }
+                } catch (\Exception $e) {}
+            }
+        }
+
+        if ($dureeSecondes) {
+            $validated['duree_secondes'] = $dureeSecondes;
+        }
+
         $galerie = Galerie::create($validated);
 
-        // Si le média est rattaché à un film et qu'on a la durée, on met à jour la durée du film (toujours, même si déjà renseignée)
+        // Synchronise aussi la durée sur le film pour la rétrocompatibilité
         if ($galerie->film && $dureeSecondes) {
-            $galerie->film->duree = (int) ceil($dureeSecondes / 60); // en minutes
+            $galerie->film->duree          = (int) round($dureeSecondes / 60);
+            $galerie->film->duree_secondes = $dureeSecondes;
             $galerie->film->save();
         }
 

@@ -32,7 +32,18 @@
                         </div>
                         <div class="col-sm-6 col-xl-4">
                             <span class="text-muted d-block small">Durée</span>
-                            <strong>{{ $film->duree }} min</strong>
+                            @if($film->duree_secondes)
+                                @php
+                                    $h = intdiv($film->duree_secondes, 3600);
+                                    $m = intdiv($film->duree_secondes % 3600, 60);
+                                    $s = $film->duree_secondes % 60;
+                                @endphp
+                                <strong>{{ $h > 0 ? $h.'h ' : '' }}{{ str_pad($m, 2, '0', STR_PAD_LEFT) }}min {{ str_pad($s, 2, '0', STR_PAD_LEFT) }}s</strong>
+                            @elseif($film->duree)
+                                <strong>{{ $film->duree }} min</strong>
+                            @else
+                                <span class="text-muted fst-italic">Non renseignée</span>
+                            @endif
                         </div>
                         <div class="col-sm-6 col-xl-4">
                             <span class="text-muted d-block small">Pays</span>

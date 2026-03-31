@@ -8,6 +8,8 @@ use App\Models\Film;
 use App\Models\Realisateur;
 use App\Models\Acteur;
 use App\Models\Projection;
+use App\Models\Actualite;
+use App\Models\ContactMessage;
 
 class PublicController extends Controller
 {
@@ -16,7 +18,8 @@ class PublicController extends Controller
 
     public function home()
     {
-        return view('public.home');
+        $filmsCount = Film::count();
+        return view('public.home', compact('filmsCount'));
     }
 
     public function films()
@@ -154,7 +157,6 @@ class PublicController extends Controller
             $search = $request->input('q');
             $baseQuery->where(function ($q) use ($search) {
                 $q->whereHas('film', fn($f) => $f->where('titre', 'like', "%{$search}%"))
-                  ->orWhere('salle', 'like', "%{$search}%")
                   ->orWhere('lieu', 'like', "%{$search}%");
             });
         }
@@ -163,26 +165,7 @@ class PublicController extends Controller
             $baseQuery->whereDate('date', $request->input('date'));
         }
 
-        if ($request->filled('salle')) {
-            $baseQuery->where('salle', $request->input('salle'));
-        }
-
         $projections = $baseQuery->get();
-
-        $now = Carbon::now();
-        // Propose d'abord les prochaines séances; fallback sur les plus récentes.
-        $recommandees = $projections
-            ->filter(fn ($projection) => $projection->dateHeure()->gte($now))
-            ->sortBy(fn ($projection) => $projection->dateHeure()->timestamp)
-            ->take(3)
-            ->values();
-
-        if ($recommandees->isEmpty()) {
-            $recommandees = $projections
-                ->sortByDesc(fn ($projection) => $projection->dateHeure()->timestamp)
-                ->take(3)
-                ->values();
-        }
 
         $etat = $request->input('etat', 'tous');
         // Filtre final en mémoire selon l'état calculé de chaque projection.
@@ -196,13 +179,32 @@ class PublicController extends Controller
             };
         })->values();
 
-        $salles = Projection::where('publie', true)
-            ->select('salle')
-            ->distinct()
-            ->orderBy('salle')
-            ->pluck('salle');
+        // La section du haut reste standard dès qu'il existe au moins une projection.
+        // On y affiche jusqu'à 3 séances prioritaires puis on retire ces séances du programme du bas.
+        $topProjections = $projections
+            ->sortBy(function ($projection) {
+                $priority = match (true) {
+                    $projection->estEnCours() => 0,
+                    $projection->estAVenir() => 1,
+                    $projection->estArreteeManuellement() => 2,
+                    default => 3,
+                };
 
-        return view('public.projections', compact('projections', 'salles', 'etat', 'recommandees'));
+                return [$priority, $projection->dateHeure()->timestamp];
+            })
+            ->take(3)
+            ->values();
+
+        $topIds = $topProjections->pluck('id')->all();
+        $remainingForProgram = $projections
+            ->reject(fn ($projection) => in_array($projection->id, $topIds, true))
+            ->values();
+
+        $projectionsProgramme = $remainingForProgram
+            ->sortBy(fn ($projection) => $projection->dateHeure()->timestamp)
+            ->values();
+
+        return view('public.projections', compact('projections', 'etat', 'topProjections', 'projectionsProgramme'));
     }
 
     public function visionner(Request $request, Projection $projection)
@@ -223,37 +225,112 @@ class PublicController extends Controller
         // Décalage utilisé pour synchroniser la lecture média avec l'avancement réel.
         $playbackOffsetSeconds = max(0, (int) $projection->tempsEcouleSecondes());
 
-        $medias = collect($film?->galeries ?? [])
+        // Filtrer les médias selon la sélection de la projection
+        $allMedias = collect($film?->galeries ?? [])
             ->filter(fn ($media) => $media->type_media === 'video')
-            ->sortByDesc(fn ($media) => $media->date?->timestamp ?? 0)
-            ->values()
-            ->map(function ($media) use ($playbackOffsetSeconds) {
+            ->sortBy(fn ($media) => $media->created_at?->timestamp ?? $media->id)
+            ->values();
+
+        // Si la projection a une sélection spécifique, utiliser cette sélection
+        if ($projection->media_selection_mode === 'specific' && !empty($projection->selected_media_ids)) {
+            $selectedIds = $projection->selected_media_ids;
+            $medias = $allMedias
+                ->whereIn('id', $selectedIds)
+                ->values()
+                // Respecter l'ordre de la sélection
+                ->sort(function ($a, $b) use ($selectedIds) {
+                    return array_search($a->id, $selectedIds) <=> array_search($b->id, $selectedIds);
+                })
+                ->values();
+        } else {
+            // Mode 'all' ou pas de sélection: utiliser tous les médias
+            $medias = $allMedias;
+        }
+
+        $medias = $medias
+            ->map(function ($media) {
                 $fichierUrl = $media->fichier ? asset('storage/'.$media->fichier) : null;
-                $embedUrl = $this->toEmbedUrl($media->lien, $playbackOffsetSeconds);
+                $embedUrl = $this->toEmbedUrl($media->lien, 0);
+                $embedProvider = $this->detectEmbedProvider($media->lien);
 
                 return [
                     'id' => $media->id,
                     'titre' => $media->titre,
                     'description' => $media->description,
                     'date' => $media->date,
+                    'duree_secondes' => (int) ($media->duree_secondes ?? 0),
                     'kind' => 'video',
                     'fichier_url' => $fichierUrl,
                     'lien' => $media->lien,
                     'embed_url' => $embedUrl,
+                    'embed_provider' => $embedProvider,
                     'has_video_source' => !empty($fichierUrl) || !empty($media->lien),
                 ];
             })
             ->filter(fn ($media) => $media['has_video_source'])
             ->values();
 
-        $selectedMediaId = (int) $request->query('media');
-        $selectedMedia = $medias->firstWhere('id', $selectedMediaId);
+        $activeMedia = null;
+        $playbackOffsetInActiveMedia = 0;
+        $autoNext = $request->boolean('autonext');
+        $fromMediaId = (int) $request->query('from_media', 0);
 
-        $defaultMedia = $medias->first();
+        // Passage automatique interne: quand la vidéo finit, on force la suivante
+        // sans exposer une sélection manuelle côté interface publique.
+        if ($medias->isNotEmpty() && $autoNext && $fromMediaId > 0) {
+            $fromIndex = $medias->search(fn ($media) => (int) ($media['id'] ?? 0) === $fromMediaId);
 
-        $activeMedia = $selectedMedia ?? $defaultMedia;
+            if ($fromIndex !== false) {
+                $nextMedia = $medias->get($fromIndex + 1);
+                if ($nextMedia) {
+                    $activeMedia = $nextMedia;
+                    $playbackOffsetInActiveMedia = 0;
+                }
+            }
+        }
 
-        return view('public.visionnage', compact('projection', 'film', 'medias', 'activeMedia', 'playbackOffsetSeconds'));
+        if (!$activeMedia && $medias->isNotEmpty()) {
+            $elapsed = max(0, $playbackOffsetSeconds);
+            $cursor = 0;
+
+            foreach ($medias as $media) {
+                $duration = max(0, (int) ($media['duree_secondes'] ?? 0));
+
+                // Si la durée n'est pas connue, on ne peut pas découper précisément la timeline.
+                // On prend alors ce média comme média courant.
+                if ($duration <= 0) {
+                    $activeMedia = $media;
+                    $playbackOffsetInActiveMedia = 0;
+                    break;
+                }
+
+                if ($elapsed < ($cursor + $duration)) {
+                    $activeMedia = $media;
+                    $playbackOffsetInActiveMedia = max(0, $elapsed - $cursor);
+                    break;
+                }
+
+                $cursor += $duration;
+            }
+
+            if (!$activeMedia) {
+                $activeMedia = $medias->last();
+                $lastDuration = max(0, (int) ($activeMedia['duree_secondes'] ?? 0));
+                $playbackOffsetInActiveMedia = $lastDuration > 0 ? max(0, $lastDuration - 1) : 0;
+            }
+        }
+
+        if ($activeMedia && !empty($activeMedia['lien'])) {
+            $activeMedia['embed_url'] = $this->toEmbedUrl($activeMedia['lien'], $playbackOffsetInActiveMedia);
+        }
+
+        return view('public.visionnage', [
+            'projection' => $projection,
+            'film' => $film,
+            'medias' => $medias,
+            'activeMedia' => $activeMedia,
+            'playbackOffsetSeconds' => $playbackOffsetInActiveMedia,
+        ]);
     }
 
     public function projectionStatus(Projection $projection)
@@ -289,24 +366,46 @@ class PublicController extends Controller
         $startAtSeconds = max(0, $startAtSeconds);
         $youtubeStartParam = $startAtSeconds > 0 ? '&start='.$startAtSeconds : '';
         $vimeoStartFragment = $startAtSeconds > 0 ? '#t='.$startAtSeconds.'s' : '';
+        $origin = urlencode(request()->getSchemeAndHttpHost());
+        $youtubeBaseParams = 'autoplay=1&mute=1&rel=0&controls=0&disablekb=1&modestbranding=1&playsinline=1&fs=0&enablejsapi=1&origin='.$origin;
+        $vimeoBaseParams = 'autoplay=1&muted=1&controls=0&keyboard=0&api=1&player_id=projection-embed-player';
 
         if (preg_match('/youtube\.com\/watch\?v=([^&]+)/', $url, $matches)) {
-            return 'https://www.youtube.com/embed/' . $matches[1] . '?autoplay=1&mute=1&rel=0'.$youtubeStartParam;
+            return 'https://www.youtube.com/embed/' . $matches[1] . '?'.$youtubeBaseParams.$youtubeStartParam;
         }
 
         if (preg_match('/youtu\.be\/([^?&]+)/', $url, $matches)) {
-            return 'https://www.youtube.com/embed/' . $matches[1] . '?autoplay=1&mute=1&rel=0'.$youtubeStartParam;
+            return 'https://www.youtube.com/embed/' . $matches[1] . '?'.$youtubeBaseParams.$youtubeStartParam;
         }
 
         if (preg_match('/youtube\.com\/shorts\/([^?&]+)/', $url, $matches)) {
-            return 'https://www.youtube.com/embed/' . $matches[1] . '?autoplay=1&mute=1&rel=0'.$youtubeStartParam;
+            return 'https://www.youtube.com/embed/' . $matches[1] . '?'.$youtubeBaseParams.$youtubeStartParam;
         }
 
         if (preg_match('/vimeo\.com\/(\d+)/', $url, $matches)) {
-            return 'https://player.vimeo.com/video/' . $matches[1] . '?autoplay=1&muted=1'.$vimeoStartFragment;
+            return 'https://player.vimeo.com/video/' . $matches[1] . '?'.$vimeoBaseParams.$vimeoStartFragment;
         }
 
         return null;
+    }
+
+    private function detectEmbedProvider(?string $url): ?string
+    {
+        if (!$url) {
+            return null;
+        }
+
+        if (preg_match('/youtube\.com\/watch\?v=([^&]+)/', $url)
+            || preg_match('/youtu\.be\/([^?&]+)/', $url)
+            || preg_match('/youtube\.com\/shorts\/([^?&]+)/', $url)) {
+            return 'youtube';
+        }
+
+        if (preg_match('/vimeo\.com\/(\d+)/', $url)) {
+            return 'vimeo';
+        }
+
+        return 'other';
     }
 
     private function getProjectionWatchState(Projection $projection): array
@@ -366,5 +465,28 @@ class PublicController extends Controller
     public function contact()
     {
         return view('public.contact');
+    }
+
+    public function sendContact(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:120',
+            'email' => 'required|email|max:190',
+            'phone' => 'nullable|string|max:30',
+            'subject' => 'required|string|max:120',
+            'message' => 'required|string|max:5000',
+        ]);
+
+        ContactMessage::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'] ?? null,
+            'subject' => $validated['subject'],
+            'message' => $validated['message'],
+            'ip_address' => $request->ip(),
+            'user_agent' => substr((string) $request->userAgent(), 0, 1000),
+        ]);
+
+        return redirect()->route('public.contact')->with('success', 'Votre message a bien ete envoye. L\'equipe du FESPACO vous repondra rapidement.');
     }
 }
