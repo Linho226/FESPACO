@@ -61,7 +61,7 @@
             <div id="projection-player-zone">
             @if($activeMedia)
                 @if(!empty($activeMedia['fichier_url']))
-                    <video id="projection-video-player" class="w-100 rounded" controls autoplay preload="metadata">
+                    <video id="projection-video-player" class="w-100 rounded" controls autoplay preload="metadata" data-projection-etat="{{ $projection->estEnCours() ? 'en_cours' : 'autre' }}">
                         <source src="{{ $activeMedia['fichier_url'] }}">
                         Votre navigateur ne prend pas en charge la lecture vidéo.
                     </video>
@@ -117,6 +117,45 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+        // Empêche la pause et le seek si projection en cours, mais laisse volume et plein écran
+        document.addEventListener('DOMContentLoaded', function() {
+            const video = document.getElementById('projection-video-player');
+            if (video && video.dataset.projectionEtat === 'en_cours') {
+                // Empêche la pause
+                video.addEventListener('pause', function(e) {
+                    if (!video.ended && !video.seeking) {
+                        video.play();
+                    }
+                });
+                // Empêche le seek
+                let lastTime = 0;
+                video.addEventListener('timeupdate', function() {
+                    lastTime = video.currentTime;
+                });
+                video.addEventListener('seeking', function(e) {
+                    if (Math.abs(video.currentTime - lastTime) > 1) {
+                        video.currentTime = lastTime;
+                    }
+                });
+                // Empêche le raccourci clavier espace
+                video.addEventListener('keydown', function(e) {
+                    if (e.code === 'Space') {
+                        e.preventDefault();
+                    }
+                });
+                // Empêche toute relance après la fin
+                let ended = false;
+                video.addEventListener('ended', function() {
+                    ended = true;
+                });
+                video.addEventListener('play', function(e) {
+                    if (ended) {
+                        video.pause();
+                        video.currentTime = video.duration;
+                    }
+                });
+            }
+        });
     const statusUrl = @json(route('public.projections.status', $projection));
     const projectionsUrl = @json(route('public.projections'));
     const playbackOffsetSeconds = Number(@json($playbackOffsetSeconds ?? 0)) || 0;

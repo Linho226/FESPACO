@@ -20,6 +20,12 @@
             <div class="row g-4">
                 <div class="col-lg-8">
                     <div class="row g-3 mb-2">
+                                                <div class="col-sm-6 col-xl-4">
+                                                    <span class="text-muted d-block small">Médias associés</span>
+                                                    <a href="{{ route('admin.galeries.index', ['film_id' => $film->id]) }}" class="fw-bold text-decoration-underline">
+                                                        {{ $film->galeries->count() }} média{{ $film->galeries->count() > 1 ? 's' : '' }}
+                                                    </a>
+                                                </div>
                         <div class="col-sm-6 col-xl-4">
                             <span class="text-muted d-block small">Année</span>
                             <strong>{{ $film->annee_production }}</strong>

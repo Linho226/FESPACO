@@ -6,6 +6,37 @@
     <title>@yield('title', 'Administration FESPACO')</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
+                                                        /* Correctif visibilité extrême pour les lignes du tableau projections (états) */
+                                                        .admin-main .table tr.table-success > *,
+                                                        .admin-main .table tr.table-warning > *,
+                                                        .admin-main .table tr.table-success a,
+                                                        .admin-main .table tr.table-warning a,
+                                                        .admin-main .table tr.table-success span,
+                                                        .admin-main .table tr.table-warning span,
+                                                        .admin-main .table tr.table-success small,
+                                                        .admin-main .table tr.table-warning small,
+                                                        .admin-main .table tr.table-success button,
+                                                        .admin-main .table tr.table-warning button {
+                                                            color: #1a1a1a !important;
+                                                        }
+                                                        .admin-main .table tr.table-success {
+                                                            background-color: #b6f5c9 !important;
+                                                        }
+                                                        .admin-main .table tr.table-warning {
+                                                            background-color: #fff7b3 !important;
+                                                        }
+                                                        .admin-main .table tr.table-success .btn-danger,
+                                                        .admin-main .table tr.table-warning .btn-danger {
+                                                            color: #fff !important;
+                                                        }
+                                                        .admin-main .table tr.table-success .btn-warning,
+                                                        .admin-main .table tr.table-warning .btn-warning {
+                                                            color: #fff !important;
+                                                        }
+                                                        .admin-main .table tr.table-success .badge,
+                                                        .admin-main .table tr.table-warning .badge {
+                                                            color: #fff !important;
+                                                        }
                                                 /* Contraste renforcé pour dashboard et widgets */
                                                 .dashboard-header h1,
                                                 .stat-content p,

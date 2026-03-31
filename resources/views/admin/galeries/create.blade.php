@@ -59,12 +59,9 @@
 
                 {{-- Type de média --}}
                 <div class="col-12 col-md-4">
-                    <label for="type_media" class="form-label">Type de média <span class="text-danger">*</span></label>
-                    <select name="type_media" id="type_media" class="form-select @error('type_media') is-invalid @enderror" required>
-                        <option value="image" {{ old('type_media') === 'image' ? 'selected' : '' }}>🖼 Image</option>
-                        <option value="video" {{ old('type_media') === 'video' ? 'selected' : '' }}>🎬 Vidéo</option>
-                    </select>
-                    @error('type_media') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    <input type="hidden" name="type_media" value="video">
+                    <label class="form-label">Type de média</label>
+                    <div class="form-control bg-light">🎬 Vidéo</div>
                 </div>
 
                 {{-- Upload fichier --}}
