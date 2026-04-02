@@ -7,7 +7,6 @@ use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
@@ -20,7 +19,9 @@ class RegisteredUserController extends Controller
      */
     public function create(): View
     {
-        return view('auth.register');
+        $canCreateAdmin = User::where('is_admin', true)->doesntExist();
+
+        return view('auth.register', compact('canCreateAdmin'));
     }
 
     /**
@@ -30,22 +31,30 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        $canCreateAdmin = User::where('is_admin', true)->doesntExist();
+
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'create_admin' => ['nullable', 'boolean'],
         ]);
+
+        $isAdmin = $canCreateAdmin && $request->boolean('create_admin');
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'is_admin' => $isAdmin,
         ]);
 
         event(new Registered($user));
 
-        Auth::login($user);
+        $status = $isAdmin
+            ? 'Compte administrateur cree. Connectez-vous pour acceder au tableau de bord.'
+            : 'Compte cree. Connectez-vous pour continuer.';
 
-        return redirect(route('admin', absolute: false));
+        return redirect()->route('login')->with('status', $status);
     }
 }

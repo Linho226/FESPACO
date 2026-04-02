@@ -18,6 +18,11 @@ class DashboardController extends Controller
      */
     public function index(): View
     {
+        $ongoingProjections = Projection::with('film')
+            ->get()
+            ->filter(fn (Projection $projection) => $projection->estEnCours())
+            ->values();
+
         // Statistiques générales
         $stats = [
             'total_films' => Film::count(),
@@ -40,6 +45,10 @@ class DashboardController extends Controller
             'average_occupancy' => AttendanceRecord::avg('occupancy_rate') ?? 0,
             'total_spectators' => AttendanceRecord::sum('spectators_count') ?? 0,
             'attendance_records_count' => AttendanceRecord::count(),
+            'ongoing_projections_count' => $ongoingProjections->count(),
+            'connected_users_during_projections' => $ongoingProjections->sum(
+                fn (Projection $projection) => $projection->activeViewersCount()
+            ),
         ];
 
         // Projections à venir (prochains 7 jours)
@@ -50,11 +59,9 @@ class DashboardController extends Controller
             ->limit(10)
             ->get();
 
-        // Actualités récentes
-        $recent_actualites = Actualite::latest('created_at')
-            ->limit(5)
-            ->get();
+        // Dernière actualité publiée
+        $latest_actualite = Actualite::latest('created_at')->first();
 
-        return view('admin.dashboard', compact('stats', 'upcoming_projections', 'recent_actualites'));
+        return view('admin.dashboard', compact('stats', 'upcoming_projections', 'latest_actualite'));
     }
 }

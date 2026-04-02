@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Carbon\Carbon;
 use App\Models\Film;
 use App\Models\Projection;
+use App\Models\AttendanceRecord;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -17,7 +18,7 @@ class ProjectionController extends Controller
     public function index(Request $request): View
     {
         // Charge le film et ses galeries (médias) pour éviter les N+1 queries.
-        $query = Projection::with('film.galeries')->orderBy('date')->orderBy('heure');
+        $query = Projection::with('film.galeries', 'attendanceRecord')->orderBy('date')->orderBy('heure');
 
         if ($request->filled('search')) {
             $search = $request->input('search');
@@ -188,6 +189,11 @@ class ProjectionController extends Controller
      */
     public function arreter(Projection $projection): RedirectResponse
     {
+        $validated = request()->validate([
+            'spectators_count' => ['nullable', 'integer', 'min:0'],
+            'available_seats' => ['nullable', 'integer', 'min:0'],
+        ]);
+
         if ($projection->estTerminee()) {
             return redirect()->route('admin.projections.index')
                 ->with('success', "La projection « {$projection->film->titre} » est déjà terminée.");
@@ -207,8 +213,22 @@ class ProjectionController extends Controller
 
         $projection->update(['fin_at' => now()]);
 
+        $record = AttendanceRecord::firstOrNew([
+            'projection_id' => $projection->id,
+        ]);
+
+        $spectators = (int) ($validated['spectators_count'] ?? $record->spectators_count ?? 0);
+        $availableSeats = (int) ($validated['available_seats'] ?? $record->available_seats ?? 0);
+        $totalSeats = $spectators + $availableSeats;
+        $occupancyRate = $totalSeats > 0 ? round(($spectators / $totalSeats) * 100, 2) : 0;
+
+        $record->spectators_count = $spectators;
+        $record->available_seats = $availableSeats;
+        $record->occupancy_rate = $occupancyRate;
+        $record->save();
+
         return redirect()->route('admin.projections.index')
-            ->with('success', "Projection « {$projection->film->titre} » mise en pause.");
+            ->with('success', "Projection « {$projection->film->titre} » mise en pause. Fréquentation enregistrée.");
     }
 
     private function detectConflitSalle(array $data, ?int $excludeId = null): ?Projection

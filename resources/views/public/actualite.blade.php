@@ -1,36 +1,157 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $actualite->titre }} - FESPACO</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
-    @include('public.navbar')
+@extends('public.layout')
 
-    <div class="container py-4 py-md-5" style="max-width: 900px;">
-        <h1 class="mb-3">{{ $actualite->titre }}</h1>
+@section('title', ($actualite->titre ?? 'Actualite').' - FESPACO')
 
-        <p class="text-muted mb-3">
-            Publie le {{ \Carbon\Carbon::parse($actualite->date_publication)->format('d/m/Y') }}
-            par {{ $actualite->auteur->name ?? '-' }}
-        </p>
+@section('content')
+<style>
+    :root {
+        --post-surface: rgba(10, 22, 44, 0.8);
+        --post-border: rgba(255, 255, 255, 0.11);
+        --post-title: #e8eef9;
+        --post-text: #c1cde2;
+        --post-muted: #94a8ca;
+        --post-accent: #f5a623;
+    }
 
+    body {
+        background:
+            radial-gradient(circle at 10% 15%, rgba(245, 166, 35, 0.1), transparent 28%),
+            radial-gradient(circle at 88% 78%, rgba(85, 167, 255, 0.12), transparent 32%),
+            linear-gradient(150deg, #050d1d, #0a1631) !important;
+    }
+
+    .post-wrap {
+        max-width: 980px;
+        margin: 0 auto;
+    }
+
+    .post-hero {
+        border: 1px solid var(--post-border);
+        border-radius: 20px;
+        background: linear-gradient(135deg, rgba(245, 166, 35, 0.12), rgba(85, 167, 255, 0.07));
+        padding: 1.4rem;
+        margin-bottom: 1.1rem;
+    }
+
+    .post-title {
+        margin: 0;
+        color: var(--post-title);
+        font-weight: 800;
+        line-height: 1.2;
+    }
+
+    .post-meta {
+        margin-top: 0.65rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        align-items: center;
+        color: var(--post-muted);
+        font-size: 0.92rem;
+    }
+
+    .post-chip {
+        border-radius: 999px;
+        border: 1px solid rgba(245, 166, 35, 0.4);
+        background: rgba(245, 166, 35, 0.13);
+        color: #ffdf9e;
+        font-weight: 700;
+        font-size: 0.78rem;
+        padding: 0.22rem 0.58rem;
+    }
+
+    .post-card {
+        border-radius: 16px;
+        border: 1px solid var(--post-border);
+        background: var(--post-surface);
+        overflow: hidden;
+    }
+
+    .post-image {
+        width: 100%;
+        max-height: 480px;
+        object-fit: cover;
+        display: block;
+        background: #132243;
+    }
+
+    .post-content {
+        padding: 1.2rem 1.2rem 1.4rem;
+        color: var(--post-text);
+        line-height: 1.85;
+        font-size: 1.03rem;
+    }
+
+    .post-actions {
+        margin-top: 1.1rem;
+    }
+
+    .post-back {
+        border-radius: 999px;
+        border: 1px solid rgba(245, 166, 35, 0.45);
+        background: rgba(245, 166, 35, 0.13);
+        color: #ffd992;
+        font-weight: 700;
+        text-decoration: none;
+        padding: 0.45rem 0.9rem;
+        display: inline-block;
+    }
+
+    .post-back:hover {
+        background: rgba(245, 166, 35, 0.25);
+        color: #ffe7b7;
+    }
+
+    @media (prefers-color-scheme: light) {
+        :root {
+            --post-surface: rgba(255, 255, 255, 0.95);
+            --post-border: rgba(15, 23, 42, 0.1);
+            --post-title: #0f172a;
+            --post-text: #334155;
+            --post-muted: #64748b;
+        }
+
+        body {
+            background:
+                radial-gradient(circle at 10% 15%, rgba(245, 166, 35, 0.1), transparent 28%),
+                radial-gradient(circle at 88% 78%, rgba(85, 167, 255, 0.08), transparent 32%),
+                linear-gradient(160deg, #f6f8fd, #eaf0f9) !important;
+        }
+
+        .post-chip,
+        .post-back {
+            color: #5d3b00;
+        }
+    }
+</style>
+
+<div class="post-wrap py-4 py-md-5">
+    <header class="post-hero">
+        <h1 class="post-title">{{ $actualite->titre }}</h1>
+        <div class="post-meta">
+            <span class="post-chip">Actualite</span>
+            <span>Publie le {{ \Carbon\Carbon::parse($actualite->date_publication)->format('d/m/Y') }}</span>
+            <span>•</span>
+            <span>{{ $actualite->auteur->name ?? '-' }}</span>
+        </div>
+    </header>
+
+    <article class="post-card">
         @if($actualite->image)
             <img
                 src="{{ asset('storage/'.$actualite->image) }}"
                 alt="Image actualite"
-                class="img-fluid rounded mb-4"
-                style="max-height: 460px; width: 100%; object-fit: cover;"
+                class="post-image"
             >
         @endif
 
-        <div class="mb-4" style="line-height: 1.8; font-size: 1.05rem;">
+        <div class="post-content">
             {!! nl2br(e($actualite->contenu)) !!}
-        </div>
 
-        <a href="{{ route('public.actualites') }}" class="btn btn-outline-secondary">Retour aux actualites</a>
-    </div>
-</body>
-</html>
+            <div class="post-actions">
+                <a href="{{ route('public.actualites') }}" class="post-back">Retour aux actualites</a>
+            </div>
+        </div>
+    </article>
+</div>
+@endsection

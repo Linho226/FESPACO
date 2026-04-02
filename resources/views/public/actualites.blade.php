@@ -1,51 +1,255 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Actualités - FESPACO</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        .actualite-img {
-            width: 100%;
-            height: 320px;
-            object-fit: cover;
-            object-position: center;
-            border-radius: 8px;
-            background: #eee;
+@extends('public.layout')
+
+@section('title', 'Actualites - FESPACO')
+
+@section('content')
+<style>
+    :root {
+        --news-bg: #071225;
+        --news-surface: rgba(10, 22, 44, 0.78);
+        --news-border: rgba(255, 255, 255, 0.11);
+        --news-title: #e8eef9;
+        --news-text: #a9b9d4;
+        --news-accent: #f5a623;
+        --news-accent-2: #55a7ff;
+    }
+
+    body {
+        background:
+            radial-gradient(circle at 8% 15%, rgba(245, 166, 35, 0.12), transparent 26%),
+            radial-gradient(circle at 88% 78%, rgba(85, 167, 255, 0.12), transparent 32%),
+            linear-gradient(150deg, #050d1d, #0a1631) !important;
+        color: var(--news-title);
+    }
+
+    .news-wrap {
+        max-width: 1160px;
+        margin: 0 auto;
+    }
+
+    .news-hero {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        padding: 1.4rem;
+        border-radius: 18px;
+        border: 1px solid var(--news-border);
+        background: linear-gradient(135deg, rgba(245, 166, 35, 0.13), rgba(85, 167, 255, 0.08));
+        margin-bottom: 1.4rem;
+    }
+
+    .news-hero h1 {
+        margin: 0;
+        font-weight: 800;
+        letter-spacing: 0.2px;
+    }
+
+    .news-hero p {
+        margin: 0.28rem 0 0;
+        color: var(--news-text);
+    }
+
+    .news-count {
+        flex-shrink: 0;
+        border-radius: 999px;
+        border: 1px solid rgba(245, 166, 35, 0.45);
+        background: rgba(245, 166, 35, 0.15);
+        color: #ffd992;
+        font-weight: 700;
+        font-size: 0.85rem;
+        padding: 0.45rem 0.8rem;
+    }
+
+    .news-meta {
+        color: var(--news-text);
+        font-size: 0.86rem;
+        margin: 0;
+    }
+
+    .news-title {
+        color: var(--news-title);
+        margin: 0;
+        font-weight: 700;
+        line-height: 1.35;
+    }
+
+    .news-excerpt {
+        color: var(--news-text);
+        margin: 0;
+        line-height: 1.65;
+        flex: 1;
+    }
+
+    .news-btn {
+        border-radius: 999px;
+        border: 1px solid rgba(245, 166, 35, 0.52);
+        background: rgba(245, 166, 35, 0.14);
+        color: #ffd992;
+        font-weight: 700;
+        font-size: 0.88rem;
+        width: fit-content;
+        padding: 0.45rem 0.9rem;
+        text-decoration: none;
+    }
+
+    .news-btn:hover {
+        background: rgba(245, 166, 35, 0.25);
+        color: #ffe7b7;
+    }
+
+    .news-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(295px, 1fr));
+        gap: 1rem;
+    }
+
+    .news-card {
+        border-radius: 14px;
+        border: 1px solid var(--news-border);
+        background: var(--news-surface);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        min-height: 100%;
+        transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .news-card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(245, 166, 35, 0.32);
+        box-shadow: 0 16px 30px rgba(3, 8, 24, 0.28);
+    }
+
+    .news-card-image {
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        object-fit: cover;
+        background: #132243;
+    }
+
+    .news-card-body {
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.55rem;
+        flex: 1;
+    }
+
+    .news-card .news-excerpt {
+        font-size: 0.95rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .news-topline {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        border-radius: 999px;
+        padding: 0.2rem 0.55rem;
+        background: rgba(85, 167, 255, 0.13);
+        border: 1px solid rgba(85, 167, 255, 0.3);
+        font-size: 0.74rem;
+        color: #9fd0ff;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+        width: fit-content;
+    }
+
+    .news-empty {
+        border-radius: 14px;
+        border: 1px dashed var(--news-border);
+        padding: 2.5rem 1rem;
+        text-align: center;
+        color: var(--news-text);
+        background: rgba(10, 22, 44, 0.4);
+    }
+
+    .news-pagination {
+        margin-top: 1.4rem;
+    }
+
+    @media (max-width: 575.98px) {
+        .news-hero {
+            flex-direction: column;
+            align-items: flex-start;
         }
-    </style>
-</head>
-<body>
-    @include('public.navbar')
-    <div class="container py-5">
-        <h1 class="mb-4">Actualités</h1>
-        <p>Les dernières nouvelles du festival FESPACO.</p>
-        <div class="row g-4">
-            @forelse($actualites as $actualite)
-                <div class="col-md-6 col-lg-4">
-                    <div class="card h-100 shadow-sm">
-                        @if($actualite->image)
-                            <img src="{{ asset('storage/'.$actualite->image) }}" class="card-img-top actualite-img" alt="Image actualité">
-                        @endif
-                        <div class="card-body">
-                            <h5 class="card-title">{{ $actualite->titre }}</h5>
-                            <p class="card-text small text-muted mb-1">
-                                Publié le {{ \Carbon\Carbon::parse($actualite->date_publication)->format('d/m/Y') }}
-                                par {{ $actualite->auteur->name ?? '-' }}
-                            </p>
-                            <p class="card-text">{{ \Illuminate\Support\Str::limit(strip_tags($actualite->contenu), 120) }}</p>
-                            <a href="{{ route('public.actualites.show', $actualite) }}" class="btn btn-outline-primary btn-sm">Lire la suite</a>
-                        </div>
-                    </div>
-                </div>
-            @empty
-                <div class="col-12 text-center text-muted">Aucune actualité pour le moment.</div>
-            @endforelse
+    }
+
+    @media (prefers-color-scheme: light) {
+        :root {
+            --news-surface: rgba(255, 255, 255, 0.95);
+            --news-border: rgba(15, 23, 42, 0.1);
+            --news-title: #0f172a;
+            --news-text: #475569;
+        }
+
+        body {
+            background:
+                radial-gradient(circle at 8% 15%, rgba(245, 166, 35, 0.1), transparent 28%),
+                radial-gradient(circle at 88% 78%, rgba(85, 167, 255, 0.09), transparent 32%),
+                linear-gradient(160deg, #f6f8fd, #eaf0f9) !important;
+        }
+
+        .news-hero {
+            background: linear-gradient(135deg, rgba(245, 166, 35, 0.14), rgba(85, 167, 255, 0.07));
+        }
+
+        .news-count {
+            color: #5d3b00;
+            background: rgba(245, 166, 35, 0.2);
+        }
+
+        .news-btn {
+            color: #5d3b00;
+        }
+    }
+</style>
+
+<div class="news-wrap py-4 py-md-5">
+    <header class="news-hero">
+        <div>
+            <h1>Actualites</h1>
+            <p>Les dernieres nouvelles du festival FESPACO, en direct de la redaction.</p>
         </div>
-        <div class="mt-4">
+        <span class="news-count">{{ $actualites->total() }} publication(s)</span>
+    </header>
+
+    @if($actualites->count() === 0)
+        <div class="news-empty">Aucune actualite pour le moment.</div>
+    @else
+        <section class="news-grid">
+            @foreach($actualites as $index => $actualite)
+                <article class="news-card">
+                    @if($actualite->image)
+                        <img src="{{ asset('storage/'.$actualite->image) }}" alt="Image actualite" class="news-card-image">
+                    @else
+                        <div class="news-card-image"></div>
+                    @endif
+
+                    <div class="news-card-body">
+                        @if($index === 0)
+                            <span class="news-topline">A la une</span>
+                        @endif
+
+                        <p class="news-meta">
+                            {{ \Carbon\Carbon::parse($actualite->date_publication)->format('d/m/Y') }}
+                            • {{ $actualite->auteur->name ?? '-' }}
+                        </p>
+                        <h2 class="news-title h5">{{ $actualite->titre }}</h2>
+                        <p class="news-excerpt">{{ \Illuminate\Support\Str::limit(strip_tags($actualite->contenu), 165) }}</p>
+                        <a href="{{ route('public.actualites.show', $actualite) }}" class="news-btn">Lire la suite</a>
+                    </div>
+                </article>
+            @endforeach
+        </section>
+
+        <div class="news-pagination">
             {{ $actualites->links() }}
         </div>
-    </div>
-</body>
-</html>
+    @endif
+</div>
+@endsection

@@ -11,7 +11,7 @@ class AdminMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         if (!auth()->check() || !auth()->user()->isAdmin()) {
-            abort(403, 'Accès réservé aux administrateurs.');
+            return redirect()->route('public.home');
         }
 
         return $next($request);

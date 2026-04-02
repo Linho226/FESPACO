@@ -5,9 +5,13 @@ namespace App\Models;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\Cache;
 
 class Projection extends Model
 {
+    public const ACTIVE_VIEWER_TTL_SECONDS = 30;
+
     protected $fillable = [
         'film_id',
         'date',
@@ -36,6 +40,65 @@ class Projection extends Model
     public function film(): BelongsTo
     {
         return $this->belongsTo(Film::class);
+    }
+
+    public function attendanceRecord(): HasOne
+    {
+        return $this->hasOne(AttendanceRecord::class);
+    }
+
+    public function registerActiveViewer(int $userId, ?Carbon $seenAt = null): void
+    {
+        $seenAt ??= now();
+        $viewers = $this->pruneActiveViewers($seenAt);
+        $viewers[(string) $userId] = $seenAt->timestamp;
+
+        Cache::put(
+            $this->activeViewersCacheKey(),
+            $viewers,
+            $seenAt->copy()->addSeconds(self::ACTIVE_VIEWER_TTL_SECONDS * 2)
+        );
+    }
+
+    public function activeViewersCount(?Carbon $referenceTime = null): int
+    {
+        return count($this->pruneActiveViewers($referenceTime));
+    }
+
+    public function activeViewersCacheKey(): string
+    {
+        return 'projection:' . $this->id . ':active_viewers';
+    }
+
+    private function pruneActiveViewers(?Carbon $referenceTime = null): array
+    {
+        $referenceTime ??= now();
+        $rawViewers = Cache::get($this->activeViewersCacheKey(), []);
+
+        if (!is_array($rawViewers)) {
+            Cache::forget($this->activeViewersCacheKey());
+            return [];
+        }
+
+        $cutoff = $referenceTime->copy()->subSeconds(self::ACTIVE_VIEWER_TTL_SECONDS)->timestamp;
+
+        $activeViewers = collect($rawViewers)
+            ->filter(fn ($timestamp) => is_numeric($timestamp) && (int) $timestamp >= $cutoff)
+            ->map(fn ($timestamp) => (int) $timestamp)
+            ->all();
+
+        if ($activeViewers === []) {
+            Cache::forget($this->activeViewersCacheKey());
+            return [];
+        }
+
+        Cache::put(
+            $this->activeViewersCacheKey(),
+            $activeViewers,
+            $referenceTime->copy()->addSeconds(self::ACTIVE_VIEWER_TTL_SECONDS * 2)
+        );
+
+        return $activeViewers;
     }
 
     /** Date+heure planifiées en objet Carbon. */

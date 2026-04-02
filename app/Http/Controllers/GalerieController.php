@@ -156,12 +156,35 @@ class GalerieController extends Controller
 
     public function publicIndex()
     {
-        $galeries = Galerie::with('film')->orderByDesc('date')->paginate(20);
-        return view('public.galerie', compact('galeries'));
+        $selectedFilmId = request()->query('film_id');
+
+        $query = Galerie::with('film')
+            ->orderByRaw('film_id IS NULL')
+            ->orderBy('film_id')
+            ->orderByDesc('date')
+            ->orderByDesc('created_at');
+
+        if (!empty($selectedFilmId)) {
+            $query->where('film_id', $selectedFilmId);
+        }
+
+        $films = Film::query()
+            ->orderBy('titre')
+            ->get(['id', 'titre']);
+
+        $galeries = $query->paginate(20)->withQueryString();
+
+        return view('public.galerie', compact('galeries', 'films', 'selectedFilmId'));
     }
 
     public function show(Galerie $galerie)
     {
+        if (!auth()->check()) {
+            return redirect()->route('login', [
+                'redirect' => route('galerie.show', $galerie, false),
+            ])->with('status', 'Veuillez vous connecter pour ouvrir un element de la galerie.');
+        }
+
         return view('public.galerie_show', compact('galerie'));
     }
 

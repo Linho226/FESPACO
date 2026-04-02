@@ -4,17 +4,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Projections - FESPACO</title>
+    <script>
+        (() => {
+            const mq = window.matchMedia('(prefers-color-scheme: dark)');
+            const apply = () => document.documentElement.setAttribute('data-bs-theme', mq.matches ? 'dark' : 'light');
+            apply();
+            if (typeof mq.addEventListener === 'function') mq.addEventListener('change', apply);
+            else mq.addListener(apply);
+        })();
+    </script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         :root {
             --primary: #006241;
             --success: #10b981;
         }
+
+        [data-bs-theme="dark"] {
+            --proj-bg: #0f1722;
+            --proj-text: #e5e7eb;
+        }
+
+        [data-bs-theme="light"] {
+            --proj-bg: #f8fafc;
+            --proj-text: #1f2937;
+        }
         
         * { box-sizing: border-box; }
         body { 
-            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 100%);
-            color: #f0f0f0;
+            background: var(--proj-bg);
+            color: var(--proj-text);
             min-height: 100vh;
         }
         
@@ -216,10 +235,6 @@
         }
 
         @media (prefers-color-scheme: light) {
-            body {
-                background: linear-gradient(135deg, #f4f7fb 0%, #e9eff7 100%);
-                color: #1f2937;
-            }
 
             .page-title {
                 background: none;
@@ -312,6 +327,12 @@
             </div>
         @endif
 
+        @guest
+            <div class="alert alert-info" role="alert" style="border-radius: 12px; border: 1px solid rgba(13,202,240,.35); background: rgba(13,202,240,.08); color: #d9f6ff;">
+                Connexion requise pour visionner une projection en direct.
+            </div>
+        @endguest
+
         <!-- Filtres -->
         <div class="filter-card">
             <form method="GET" action="{{ route('public.projections') }}" class="row g-2">
@@ -365,7 +386,11 @@
                                 </div>
                                 <div class="card-footer">
                                     @if(($projection->film?->galeries?->count() ?? 0) > 0)
-                                        <a href="{{ route('public.projections.visionner', $projection) }}" class="btn-watch">Regarder</a>
+                                        @auth
+                                            <a href="{{ route('public.projections.visionner', $projection) }}" class="btn-watch">Regarder</a>
+                                        @else
+                                            <a href="{{ route('login', ['redirect' => route('public.projections.visionner', $projection, false)]) }}" class="btn-watch">Se connecter</a>
+                                        @endauth
                                     @else
                                         <span class="text-muted small">Pas de vidéo</span>
                                     @endif
@@ -419,7 +444,11 @@
                             </div>
                             <div class="card-footer">
                                 @if(($projection->film?->galeries?->count() ?? 0) > 0)
-                                    <span class="btn-watch text-center w-100" style="margin: 0;">Regarder</span>
+                                    @auth
+                                        <span class="btn-watch text-center w-100" style="margin: 0;">Regarder</span>
+                                    @else
+                                        <span class="btn-watch text-center w-100" style="margin: 0;">Se connecter</span>
+                                    @endauth
                                 @else
                                     <span class="text-muted small">⏳ Pas de vidéo</span>
                                 @endif

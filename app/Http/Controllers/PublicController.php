@@ -209,6 +209,10 @@ class PublicController extends Controller
 
     public function visionner(Request $request, Projection $projection)
     {
+        if (!auth()->check()) {
+            return redirect()->route('login')->with('status', 'Veuillez vous connecter pour visionner une projection.');
+        }
+
         if (!$projection->publie) {
             abort(404);
         }
@@ -221,6 +225,8 @@ class PublicController extends Controller
         if (!$watchState['can_watch']) {
             return redirect()->route('public.projections')->with('warning', $watchState['message']);
         }
+
+        $projection->registerActiveViewer((int) $request->user()->id);
 
         // Décalage utilisé pour synchroniser la lecture média avec l'avancement réel.
         $playbackOffsetSeconds = max(0, (int) $projection->tempsEcouleSecondes());
@@ -340,6 +346,9 @@ class PublicController extends Controller
         }
 
         $state = $this->getProjectionWatchState($projection);
+        if (auth()->check() && $state['can_watch']) {
+            $projection->registerActiveViewer((int) auth()->id());
+        }
         $etat = $projection->etat();
         $pausedSince = $projection->estArreteeManuellement() && $projection->fin_at
             ? $projection->fin_at->copy()

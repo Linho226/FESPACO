@@ -12,6 +12,7 @@ use App\Http\Controllers\ActeurController;
 use App\Http\Controllers\ProjectionController;
 use App\Http\Controllers\ActualiteController;
 use App\Http\Controllers\Admin\ContactMessageController;
+use App\Http\Controllers\Admin\UserController;
 
 // --- Routes publiques ---
 Route::get('/', [PublicController::class, 'home'])->name('public.home');
@@ -33,11 +34,16 @@ Route::post('/contact', [PublicController::class, 'sendContact'])->name('public.
 // --- Routes admin (auth + admin) ---
 Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('profile', [ProfileController::class, 'adminEdit'])->name('profile.edit');
+    Route::patch('profile', [ProfileController::class, 'adminUpdate'])->name('profile.update');
     Route::resource('actualites', ActualiteController::class);
     Route::resource('films', FilmController::class);
     Route::resource('realisateurs', RealisateurController::class);
     Route::resource('acteurs', ActeurController::class);
     Route::resource('projections', ProjectionController::class);
+    Route::get('users', [UserController::class, 'index'])->name('users.index');
+    Route::patch('users/{user}', [UserController::class, 'update'])->name('users.update');
+    Route::delete('users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
     Route::get('messages', [ContactMessageController::class, 'index'])->name('messages.index');
     Route::get('messages/{contactMessage}', [ContactMessageController::class, 'show'])->name('messages.show');
     Route::post('messages/{contactMessage}/read', [ContactMessageController::class, 'markRead'])->name('messages.read');

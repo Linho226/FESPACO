@@ -4,10 +4,47 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $acteur->prenom }} {{ $acteur->nom }} - FESPACO</title>
+    <script>
+        (() => {
+            const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+            const applyTheme = () => {
+                document.documentElement.setAttribute('data-bs-theme', mediaQuery.matches ? 'dark' : 'light');
+            };
+
+            applyTheme();
+
+            if (typeof mediaQuery.addEventListener === 'function') {
+                mediaQuery.addEventListener('change', applyTheme);
+            } else {
+                mediaQuery.addListener(applyTheme);
+            }
+        })();
+    </script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background: #f4f6f9; }
-        .profile-card { border: none; border-radius: 14px; box-shadow: 0 6px 18px rgba(0,0,0,.08); }
+        :root {
+            color-scheme: light dark;
+        }
+
+        [data-bs-theme="light"] {
+            --profile-page-bg: #f4f6f9;
+            --profile-card-bg: #ffffff;
+            --profile-card-shadow: 0 6px 18px rgba(0, 0, 0, .08);
+        }
+
+        [data-bs-theme="dark"] {
+            --profile-page-bg: #0f1722;
+            --profile-card-bg: #111b2a;
+            --profile-card-shadow: 0 10px 24px rgba(0, 0, 0, .35);
+        }
+
+        body { background: var(--profile-page-bg); }
+        .profile-card {
+            border: none;
+            border-radius: 14px;
+            background: var(--profile-card-bg);
+            box-shadow: var(--profile-card-shadow);
+        }
         .avatar { width: 140px; height: 140px; object-fit: cover; border-radius: 50%; }
     </style>
 </head>

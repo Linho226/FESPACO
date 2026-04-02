@@ -539,12 +539,6 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('admin.films.*') ? 'active' : '' }}" href="{{ route('admin.films.index') }}">
-                    <span class="nav-icon">🎬</span>
-                    <span class="nav-label">Films</span>
-                </a>
-            </li>
-            <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('admin.acteurs.*') ? 'active' : '' }}" href="{{ route('admin.acteurs.index') }}">
                     <span class="nav-icon">🎭</span>
                     <span class="nav-label">Acteurs</span>
@@ -554,6 +548,18 @@
                 <a class="nav-link {{ request()->routeIs('admin.realisateurs.*') ? 'active' : '' }}" href="{{ route('admin.realisateurs.index') }}">
                     <span class="nav-icon">🎥</span>
                     <span class="nav-label">Réalisateurs</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('admin.films.*') ? 'active' : '' }}" href="{{ route('admin.films.index') }}">
+                    <span class="nav-icon">🎬</span>
+                    <span class="nav-label">Films</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('admin.galeries.*') ? 'active' : '' }}" href="{{ route('admin.galeries.index') }}">
+                    <span class="nav-icon">🖼️</span>
+                    <span class="nav-label">Galerie</span>
                 </a>
             </li>
             <li class="nav-item">
@@ -569,9 +575,15 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('admin.galeries.*') ? 'active' : '' }}" href="{{ route('admin.galeries.index') }}">
-                    <span class="nav-icon">🖼️</span>
-                    <span class="nav-label">Galerie</span>
+                <a class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}" href="{{ route('admin.users.index') }}">
+                    <span class="nav-icon">👤</span>
+                    <span class="nav-label">Utilisateurs</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('admin.profile.*') ? 'active' : '' }}" href="{{ route('admin.profile.edit') }}">
+                    <span class="nav-icon">⚙️</span>
+                    <span class="nav-label">Mon profil</span>
                 </a>
             </li>
             <li class="nav-item">
@@ -608,6 +620,8 @@
                 <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.projections.*') ? 'active' : '' }}" href="{{ route('admin.projections.index') }}">📽️ Projections</a></li>
                 <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.actualites.*') ? 'active' : '' }}" href="{{ route('admin.actualites.index') }}">📰 Actualités</a></li>
                 <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.galeries.*') ? 'active' : '' }}" href="{{ route('admin.galeries.index') }}">🖼️ Galerie</a></li>
+                <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}" href="{{ route('admin.users.index') }}">👤 Utilisateurs</a></li>
+                <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.profile.*') ? 'active' : '' }}" href="{{ route('admin.profile.edit') }}">⚙️ Mon profil</a></li>
                 <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.messages.*') ? 'active' : '' }}" href="{{ route('admin.messages.index') }}">✉️ Messages</a></li>
                 <li class="nav-item mt-2">
                     @guest

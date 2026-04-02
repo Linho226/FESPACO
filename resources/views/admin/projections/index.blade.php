@@ -19,6 +19,12 @@
         </div>
     @endif
 
+    @if($errors->any())
+        <div class="alert alert-danger" role="alert">
+            {{ $errors->first() }}
+        </div>
+    @endif
+
     {{-- ====== ALERTES : En cours + Imminentes ====== --}}
     @if($alertes->isNotEmpty())
         <div class="mb-4">

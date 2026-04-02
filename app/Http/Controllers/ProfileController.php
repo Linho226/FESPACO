@@ -21,22 +21,24 @@ class ProfileController extends Controller
         ]);
     }
 
+    public function adminEdit(Request $request): View
+    {
+        return view('admin.profile.edit', [
+            'user' => $request->user(),
+        ]);
+    }
+
     /**
      * Update the user's profile information.
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        // Applique uniquement les champs validés par la FormRequest.
-        $request->user()->fill($request->validated());
+        return $this->persistProfileUpdate($request, 'profile.edit');
+    }
 
-        // Un changement d'email invalide la vérification actuelle.
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
-        }
-
-        $request->user()->save();
-
-        return Redirect::route('profile.edit')->with('status', 'profile-updated');
+    public function adminUpdate(ProfileUpdateRequest $request): RedirectResponse
+    {
+        return $this->persistProfileUpdate($request, 'admin.profile.edit');
     }
 
     /**
@@ -60,5 +62,18 @@ class ProfileController extends Controller
         $request->session()->regenerateToken();
 
         return Redirect::to('/');
+    }
+
+    private function persistProfileUpdate(ProfileUpdateRequest $request, string $routeName): RedirectResponse
+    {
+        $request->user()->fill($request->validated());
+
+        if ($request->user()->isDirty('email')) {
+            $request->user()->email_verified_at = null;
+        }
+
+        $request->user()->save();
+
+        return Redirect::route($routeName)->with('status', 'profile-updated');
     }
 }

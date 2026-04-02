@@ -44,8 +44,8 @@
             <div class="stat-card">
                 <div class="stat-icon galeries">🖼️</div>
                 <div class="stat-content">
-                    <h3>{{ $stats['total_galeries'] }}</h3>
-                    <p>Images en galerie</p>
+                    <h3>{{ $stats['total_galeries'] ?? \App\Models\Galerie::count() }}</h3>
+                    <p>Médias en galerie</p>
                 </div>
             </div>
         </div>
@@ -92,12 +92,9 @@
                             </div>
                         </div>
                         <div class="frequency-item mt-3">
-                            <span class="frequency-label">Total spectateurs</span>
-                            <span class="frequency-value">{{ $stats['total_spectators'] }}</span>
-                        </div>
-                        <div class="frequency-item mt-2">
-                            <span class="frequency-label">Enregistrements</span>
-                            <span class="frequency-value">{{ $stats['attendance_records_count'] }}</span>
+                            <span class="frequency-label">Utilisateurs connectés pendant une projection en cours</span>
+                            <span class="frequency-value">{{ $stats['connected_users_during_projections'] }}</span>
+                            <small class="text-muted d-block mt-1">{{ $stats['ongoing_projections_count'] }} projection(s) en cours</small>
                         </div>
                     </div>
                 </div>
@@ -168,17 +165,15 @@
                     <h5 class="card-title mb-0">📢 Actualités récentes</h5>
                 </div>
                 <div class="card-body p-0">
-                    @if($recent_actualites->count() > 0)
+                    @if($latest_actualite)
                         <div class="actualites-list">
-                            @foreach($recent_actualites as $index => $actualite)
-                                <div class="actualite-item {{ $index < $recent_actualites->count() - 1 ? 'border-bottom' : '' }}">
-                                    <div class="actualite-date">{{ $actualite->created_at->format('d/m/Y') }}</div>
-                                    <div class="actualite-content">
-                                        <h6 class="actualite-title">{{ $actualite->titre ?? 'Sans titre' }}</h6>
-                                        <p class="actualite-desc text-muted">{{ Str::limit($actualite->contenu ?? '', 120) }}</p>
-                                    </div>
+                            <div class="actualite-item">
+                                <div class="actualite-date">{{ $latest_actualite->created_at->format('d/m/Y') }}</div>
+                                <div class="actualite-content">
+                                    <h6 class="actualite-title">{{ $latest_actualite->titre ?? 'Sans titre' }}</h6>
+                                    <p class="actualite-desc text-muted">{{ Str::limit($latest_actualite->contenu ?? '', 160) }}</p>
                                 </div>
-                            @endforeach
+                            </div>
                         </div>
                     @else
                         <div class="p-3 text-center text-muted">Aucune actualité</div>

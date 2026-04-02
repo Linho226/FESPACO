@@ -1,77 +1,12 @@
-@extends('public.layout')
+@extends('admin.layout')
 
-@section('title', 'Mon profil - FESPACO')
+@section('title', 'Mon profil - Administration FESPACO')
 
 @section('content')
-<style>
-    body {
-        background:
-            radial-gradient(circle at 10% 15%, rgba(245, 166, 35, 0.08), transparent 28%),
-            radial-gradient(circle at 85% 80%, rgba(72, 137, 255, 0.1), transparent 30%),
-            linear-gradient(140deg, #070d1f, #0b1630) !important;
-        color: #edf2fb;
-    }
-
-    .profile-wrap {
-        max-width: 980px;
-        margin: 0 auto;
-    }
-
-    .profile-hero {
-        background: linear-gradient(135deg, rgba(245, 166, 35, 0.15), rgba(17, 24, 39, 0.24));
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 18px;
-    }
-
-    .profile-card {
-        background: rgba(14, 26, 52, 0.74);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 16px;
-        box-shadow: 0 10px 26px rgba(2, 8, 24, 0.35);
-    }
-
-    .profile-card .card-body {
-        padding: 1.4rem 1.3rem;
-    }
-
-    .profile-input {
-        background: rgba(8, 17, 34, 0.7);
-        border-color: rgba(255, 255, 255, 0.15);
-        color: #edf2fb;
-        border-radius: 0.7rem;
-    }
-
-    .profile-input:focus {
-        background: rgba(8, 17, 34, 0.82);
-        color: #edf2fb;
-        border-color: rgba(245, 166, 35, 0.5);
-        box-shadow: 0 0 0 0.2rem rgba(245, 166, 35, 0.2);
-    }
-
-    .form-label,
-    .h5,
-    .h3 {
-        color: #edf2fb;
-    }
-
-    .text-muted {
-        color: #a9b7cf !important;
-    }
-
-    .danger-zone {
-        border-color: rgba(220, 53, 69, 0.25);
-    }
-
-    .danger-zone .card-header {
-        color: #ffadb6;
-        background: rgba(220, 53, 69, 0.14);
-    }
-</style>
-
-<div class="profile-wrap py-3 py-md-4">
-    <div class="profile-hero p-3 p-md-4 mb-4">
+<div class="mx-auto" style="max-width: 980px;">
+    <div class="mb-4 p-4 rounded-4 border" style="background: var(--table-zebra); border-color: var(--surface-border) !important;">
         <h1 class="h3 mb-1">Mon profil</h1>
-        <p class="text-muted mb-0">Gerez vos informations personnelles, votre mot de passe et la securite de votre compte.</p>
+        <p class="text-muted mb-0">Gerez vos informations personnelles, votre mot de passe et la securite de votre compte depuis l'espace admin.</p>
     </div>
 
     @if (session('status') === 'profile-updated')
@@ -86,8 +21,8 @@
         <div class="alert alert-info">Un nouveau lien de verification a ete envoye a votre adresse email.</div>
     @endif
 
-    <div class="card profile-card mb-4">
-        <div class="card-body">
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body p-4">
             <h2 class="h5 mb-1">Informations du profil</h2>
             <p class="text-muted small mb-3">Mettez a jour votre nom et votre adresse email.</p>
 
@@ -95,19 +30,19 @@
                 @csrf
             </form>
 
-            <form method="POST" action="{{ route('profile.update') }}" class="row g-3">
+            <form method="POST" action="{{ route('admin.profile.update') }}" class="row g-3">
                 @csrf
                 @method('PATCH')
 
                 <div class="col-12">
                     <label for="name" class="form-label">Nom complet</label>
-                    <input id="name" name="name" type="text" class="form-control profile-input @error('name') is-invalid @enderror" value="{{ old('name', $user->name) }}" required autofocus autocomplete="name">
+                    <input id="name" name="name" type="text" class="form-control @error('name') is-invalid @enderror" value="{{ old('name', $user->name) }}" required autofocus autocomplete="name">
                     @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
 
                 <div class="col-12">
                     <label for="email" class="form-label">Adresse email</label>
-                    <input id="email" name="email" type="email" class="form-control profile-input @error('email') is-invalid @enderror" value="{{ old('email', $user->email) }}" required autocomplete="username">
+                    <input id="email" name="email" type="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email', $user->email) }}" required autocomplete="username">
                     @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
 
@@ -127,8 +62,8 @@
         </div>
     </div>
 
-    <div class="card profile-card mb-4">
-        <div class="card-body">
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body p-4">
             <h2 class="h5 mb-1">Mot de passe</h2>
             <p class="text-muted small mb-3">Choisissez un mot de passe long et difficile a deviner.</p>
 
@@ -138,7 +73,7 @@
 
                 <div class="col-12">
                     <label for="current_password" class="form-label">Mot de passe actuel</label>
-                    <input id="current_password" name="current_password" type="password" class="form-control profile-input @if($errors->updatePassword->has('current_password')) is-invalid @endif" autocomplete="current-password">
+                    <input id="current_password" name="current_password" type="password" class="form-control @if($errors->updatePassword->has('current_password')) is-invalid @endif" autocomplete="current-password">
                     @if($errors->updatePassword->has('current_password'))
                         <div class="invalid-feedback">{{ $errors->updatePassword->first('current_password') }}</div>
                     @endif
@@ -146,7 +81,7 @@
 
                 <div class="col-12 col-md-6">
                     <label for="password" class="form-label">Nouveau mot de passe</label>
-                    <input id="password" name="password" type="password" class="form-control profile-input @if($errors->updatePassword->has('password')) is-invalid @endif" autocomplete="new-password">
+                    <input id="password" name="password" type="password" class="form-control @if($errors->updatePassword->has('password')) is-invalid @endif" autocomplete="new-password">
                     @if($errors->updatePassword->has('password'))
                         <div class="invalid-feedback">{{ $errors->updatePassword->first('password') }}</div>
                     @endif
@@ -154,7 +89,7 @@
 
                 <div class="col-12 col-md-6">
                     <label for="password_confirmation" class="form-label">Confirmer le mot de passe</label>
-                    <input id="password_confirmation" name="password_confirmation" type="password" class="form-control profile-input @if($errors->updatePassword->has('password_confirmation')) is-invalid @endif" autocomplete="new-password">
+                    <input id="password_confirmation" name="password_confirmation" type="password" class="form-control @if($errors->updatePassword->has('password_confirmation')) is-invalid @endif" autocomplete="new-password">
                     @if($errors->updatePassword->has('password_confirmation'))
                         <div class="invalid-feedback">{{ $errors->updatePassword->first('password_confirmation') }}</div>
                     @endif
@@ -167,9 +102,9 @@
         </div>
     </div>
 
-    <div class="card profile-card danger-zone">
-        <div class="card-header fw-semibold">Zone sensible</div>
-        <div class="card-body">
+    <div class="card shadow-sm border-danger-subtle">
+        <div class="card-header text-danger fw-semibold">Zone sensible</div>
+        <div class="card-body p-4">
             <h2 class="h5 mb-1 text-danger">Supprimer mon compte</h2>
             <p class="text-muted small mb-3">Cette action est irreversible. Toutes vos donnees seront supprimees.</p>
 
@@ -179,7 +114,7 @@
 
                 <div class="col-12 col-md-6">
                     <label for="delete_password" class="form-label">Confirmez avec votre mot de passe</label>
-                    <input id="delete_password" name="password" type="password" class="form-control profile-input @if($errors->userDeletion->has('password')) is-invalid @endif" autocomplete="current-password" required>
+                    <input id="delete_password" name="password" type="password" class="form-control @if($errors->userDeletion->has('password')) is-invalid @endif" autocomplete="current-password" required>
                     @if($errors->userDeletion->has('password'))
                         <div class="invalid-feedback">{{ $errors->userDeletion->first('password') }}</div>
                     @endif

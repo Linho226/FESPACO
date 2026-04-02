@@ -14,8 +14,14 @@ class AuthenticatedSessionController extends Controller
     /**
      * Display the login view.
      */
-    public function create(): View
+    public function create(Request $request): View
     {
+        $redirect = (string) $request->query('redirect', '');
+
+        if ($redirect !== '' && str_starts_with($redirect, '/')) {
+            $request->session()->put('url.intended', $redirect);
+        }
+
         return view('auth.login');
     }
 
@@ -28,7 +34,9 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('admin.dashboard', absolute: false));
+        $homeRoute = $request->user()->isAdmin() ? 'admin.dashboard' : 'public.home';
+
+        return redirect()->intended(route($homeRoute, absolute: false));
     }
 
     /**
