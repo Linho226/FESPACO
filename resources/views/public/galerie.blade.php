@@ -16,6 +16,12 @@
         --gallery-btn-bg: #0f172a;
         --gallery-btn-text: #f8fafc;
         --gallery-btn-hover: #1e293b;
+        --gallery-info-bg: rgba(13, 202, 240, 0.08);
+        --gallery-info-border: rgba(13, 202, 240, 0.35);
+        --gallery-info-text: #0c4a5a;
+        --gallery-input-bg: #ffffff;
+        --gallery-input-text: #101a2b;
+        --gallery-input-border: rgba(15, 23, 42, 0.15);
     }
 
     [data-bs-theme="dark"] {
@@ -33,6 +39,12 @@
         --gallery-btn-bg: #f5a623;
         --gallery-btn-text: #151515;
         --gallery-btn-hover: #e19319;
+        --gallery-info-bg: rgba(8, 145, 178, 0.14);
+        --gallery-info-border: rgba(34, 211, 238, 0.38);
+        --gallery-info-text: #d8f5fb;
+        --gallery-input-bg: #172235;
+        --gallery-input-text: #e6edf9;
+        --gallery-input-border: rgba(148, 163, 184, 0.28);
     }
 
     .gallery-shell {
@@ -272,6 +284,40 @@
         margin-bottom: 1rem;
     }
 
+    .gallery-guest-alert {
+        border-radius: 12px;
+        border: 1px solid var(--gallery-info-border);
+        background: var(--gallery-info-bg);
+        color: var(--gallery-info-text);
+    }
+
+    .gallery-filter-card .form-label {
+        color: var(--gallery-text);
+        font-weight: 600;
+    }
+
+    .gallery-filter-card .form-select {
+        background-color: var(--gallery-input-bg);
+        color: var(--gallery-input-text);
+        border-color: var(--gallery-input-border);
+    }
+
+    .gallery-filter-card .form-select:focus {
+        border-color: rgba(245, 166, 35, 0.55);
+        box-shadow: 0 0 0 0.2rem rgba(245, 166, 35, 0.18);
+    }
+
+    .gallery-filter-card .btn-outline-secondary {
+        border-color: var(--gallery-input-border);
+        color: var(--gallery-text);
+    }
+
+    .gallery-filter-card .btn-outline-secondary:hover {
+        background: var(--gallery-surface-soft);
+        color: var(--gallery-text);
+        border-color: var(--gallery-input-border);
+    }
+
     .gallery-filter-status {
         color: var(--gallery-muted);
         font-size: 0.85rem;
@@ -296,7 +342,7 @@
     </section>
 
     @guest
-        <div class="alert alert-info" role="alert" style="border-radius: 12px; border: 1px solid rgba(13,202,240,.35); background: rgba(13,202,240,.08); color: #083344;">
+        <div class="alert gallery-guest-alert" role="alert">
             Vous pouvez parcourir la galerie. L'ouverture d'un media complet necessite une connexion.
         </div>
     @endguest

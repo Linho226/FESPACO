@@ -4,6 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contact - FESPACO</title>
+    <script>
+        (() => {
+            const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+            const applyTheme = () => {
+                document.documentElement.setAttribute('data-bs-theme', mediaQuery.matches ? 'dark' : 'light');
+            };
+
+            applyTheme();
+
+            if (typeof mediaQuery.addEventListener === 'function') {
+                mediaQuery.addEventListener('change', applyTheme);
+            } else {
+                mediaQuery.addListener(applyTheme);
+            }
+        })();
+    </script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         :root {
@@ -299,5 +315,7 @@
             </section>
         </div>
     </div>
+    @include('public.footer')
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -4,6 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FESPACO - Accueil</title>
+    <script>
+        (() => {
+            const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+            const applyTheme = () => {
+                document.documentElement.setAttribute('data-bs-theme', mediaQuery.matches ? 'dark' : 'light');
+            };
+
+            applyTheme();
+
+            if (typeof mediaQuery.addEventListener === 'function') {
+                mediaQuery.addEventListener('change', applyTheme);
+            } else {
+                mediaQuery.addListener(applyTheme);
+            }
+        })();
+    </script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <style>
@@ -380,41 +396,6 @@
             border-radius: 20px;
         }
 
-        /* ===== FOOTER ===== */
-        footer {
-            background: #070b12;
-            border-top: 1px solid var(--border-color);
-            padding: 3.5rem 0 1.5rem;
-            color: var(--text-muted);
-        }
-        .footer-brand {
-            font-size: 1.6rem;
-            font-weight: 800;
-            color: var(--gold);
-            margin-bottom: 0.4rem;
-            letter-spacing: -0.5px;
-        }
-        .footer-tagline { font-size: 0.82rem; line-height: 1.5; max-width: 280px; }
-        .footer-heading {
-            color: var(--text-main);
-            font-weight: 700;
-            font-size: 0.78rem;
-            text-transform: uppercase;
-            letter-spacing: 1.2px;
-            margin-bottom: 1rem;
-        }
-        .footer-links { list-style: none; padding: 0; margin: 0; }
-        .footer-links li { margin-bottom: 9px; }
-        .footer-links a { color: var(--text-muted); text-decoration: none; font-size: 0.875rem; transition: color 0.2s; }
-        .footer-links a:hover { color: var(--gold); }
-        .footer-divider { border-color: var(--border-color); margin: 2.5rem 0 1.25rem; }
-        .footer-bottom {
-            font-size: 0.78rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
         /* ===== SECTION SEPARATOR ===== */
         .section-alt { background: var(--bg-card); border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); }
 
@@ -422,7 +403,6 @@
         @media (max-width: 767px) {
             .stat-item { border-right: none; border-bottom: 1px solid var(--border-color); }
             .stat-item:last-child { border-bottom: none; }
-            .footer-bottom { flex-direction: column; gap: 8px; text-align: center; }
         }
 
         /* ===== LIGHT MODE ===== */
@@ -439,7 +419,6 @@
             .hero-overlay {
                 background: linear-gradient(160deg, rgba(10,14,23,0.82) 0%, rgba(10,14,23,0.52) 55%, rgba(10,14,23,0.82) 100%);
             }
-            footer { background: #e8eaf2; }
         }
     </style>
 </head>
@@ -574,47 +553,7 @@
         </div>
     </section>
 
-    {{-- ===== FOOTER ===== --}}
-    <footer>
-        <div class="container">
-            <div class="row g-4">
-                <div class="col-md-4">
-                    <div class="footer-brand">FESPACO</div>
-                    <div class="footer-tagline">Festival Panafricain du Cinéma et de la Télévision de Ouagadougou</div>
-                    <div class="mt-3 d-flex gap-3">
-                        <a href="/contact" style="color: var(--text-muted); font-size: 1.2rem; transition: color 0.2s;" onmouseover="this.style.color='#f5a623'" onmouseout="this.style.color=''"><i class="bi bi-envelope"></i></a>
-                    </div>
-                </div>
-                <div class="col-6 col-md-2">
-                    <div class="footer-heading">Navigation</div>
-                    <ul class="footer-links">
-                        <li><a href="/">Accueil</a></li>
-                        <li><a href="/films">Films</a></li>
-                        <li><a href="/projections">Projections</a></li>
-                        <li><a href="/galerie">Galerie</a></li>
-                    </ul>
-                </div>
-                <div class="col-6 col-md-2">
-                    <div class="footer-heading">Le festival</div>
-                    <ul class="footer-links">
-                        <li><a href="/a-propos">À propos</a></li>
-                        <li><a href="/actualites">Actualités</a></li>
-                        <li><a href="/realisateurs-acteurs">Talents</a></li>
-                        <li><a href="/contact">Contact</a></li>
-                    </ul>
-                </div>
-                <div class="col-md-4">
-                    <div class="footer-heading">À propos du festival</div>
-                    <p style="font-size: 0.85rem; line-height: 1.7;">Fondé en 1969 à Ouagadougou, le FESPACO est le plus grand festival de cinéma d'Afrique, célébrant et promouvant le cinéma africain dans le monde entier.</p>
-                </div>
-            </div>
-            <hr class="footer-divider">
-            <div class="footer-bottom">
-                <span>&copy; {{ date('Y') }} FESPACO. Tous droits réservés.</span>
-                <span>Ouagadougou, Burkina Faso</span>
-            </div>
-        </div>
-    </footer>
+    @include('public.footer')
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>

@@ -3,6 +3,55 @@
 @section('title', 'Ajouter une projection')
 
 @section('content')
+<style>
+    [data-bs-theme="light"] {
+        --projection-media-bg: #f8f9fa;
+        --projection-media-border: #dee2e6;
+        --projection-media-text: #1f2937;
+        --projection-media-muted: #6b7280;
+        --projection-media-item-bg: #ffffff;
+        --projection-media-item-border: rgba(15, 23, 42, 0.08);
+    }
+
+    [data-bs-theme="dark"] {
+        --projection-media-bg: #1b2435;
+        --projection-media-border: rgba(148, 163, 184, 0.24);
+        --projection-media-text: #e5edf8;
+        --projection-media-muted: #a8b6ca;
+        --projection-media-item-bg: #111827;
+        --projection-media-item-border: rgba(148, 163, 184, 0.2);
+    }
+
+    .projection-media-panel {
+        display: none;
+        border: 1px solid var(--projection-media-border);
+        border-radius: 0.375rem;
+        padding: 1rem;
+        background-color: var(--projection-media-bg);
+        color: var(--projection-media-text);
+    }
+
+    .projection-media-panel .form-label,
+    .projection-media-panel .form-check-label {
+        color: var(--projection-media-text);
+    }
+
+    .projection-media-divider {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--projection-media-border);
+    }
+
+    .projection-media-note {
+        color: var(--projection-media-muted) !important;
+    }
+
+    .projection-media-list .list-group-item {
+        background: var(--projection-media-item-bg);
+        color: var(--projection-media-text);
+        border-color: var(--projection-media-item-border);
+    }
+</style>
 <div class="container" style="max-width: 700px;">
     <h2 class="mb-4">Ajouter une projection</h2>
 
@@ -34,7 +83,7 @@
         </div>
 
         <!-- Section de sélection des médias (apparaît après sélection d'un film avec 2+ médias) -->
-        <div id="media_selection_section" class="mb-4" style="display: none; border: 1px solid #dee2e6; border-radius: 0.375rem; padding: 1rem; background-color: #f8f9fa;">
+        <div id="media_selection_section" class="mb-4 projection-media-panel">
             <label class="form-label fw-bold mb-3">Mode de diffusion des vidéos</label>
 
             <div class="mb-3">
@@ -55,12 +104,12 @@
             </div>
 
             <!-- Checkboxes pour mode 'specific' -->
-            <div id="media_checkboxes_container" style="display: none; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #dee2e6;">
+            <div id="media_checkboxes_container" class="projection-media-divider" style="display: none;">
                 <label class="form-label fw-bold d-block mb-2">Choisir les vidéos à diffuser :</label>
-                <div id="media_list" class="list-group"></div>
+                <div id="media_list" class="list-group projection-media-list"></div>
             </div>
 
-            <small class="text-muted d-block mt-3" id="media_count_info"></small>
+            <small class="projection-media-note d-block mt-3" id="media_count_info"></small>
         </div>
 
         <div class="row">

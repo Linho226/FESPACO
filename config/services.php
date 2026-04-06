@@ -35,4 +35,13 @@ return [
         ],
     ],
 
+    'fespaco' => [
+        'social' => [
+            'Facebook' => env('FESPACO_FACEBOOK_URL', 'https://facebook.com/'),
+            'Instagram' => env('FESPACO_INSTAGRAM_URL', 'https://instagram.com/'),
+            'YouTube' => env('FESPACO_YOUTUBE_URL', 'https://youtube.com/'),
+            'X' => env('FESPACO_X_URL', 'https://x.com/'),
+        ],
+    ],
+
 ];

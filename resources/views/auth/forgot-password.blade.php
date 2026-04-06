@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -21,12 +21,28 @@
             --accent-strong: #e39b0f;
             --danger: #ff7b7b;
             --ok: #7ce0b2;
+            --nav-bg: rgba(21, 27, 36, 0.9);
+            --nav-bg-scrolled: rgba(15, 21, 30, 0.95);
+            --nav-border: rgba(255, 255, 255, 0.08);
+            --nav-brand: #fff;
+            --nav-link: rgba(255, 255, 255, 0.92);
+            --nav-link-hover-bg: rgba(255, 255, 255, 0.08);
+            --nav-link-hover-color: #fff;
+            --nav-collapse-bg: rgba(16, 22, 32, 0.96);
+            --nav-collapse-border: rgba(255, 255, 255, 0.09);
+            --login-border: rgba(255, 255, 255, 0.35);
+            --login-text: #fff;
+            --nav-drawer-bg: #101827;
+            --nav-drawer-border: rgba(255, 255, 255, 0.08);
+            --nav-drawer-shadow: -28px 0 44px rgba(0, 0, 0, 0.42);
         }
 
         * { box-sizing: border-box; }
 
         body {
             margin: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
             font-family: 'Source Sans 3', sans-serif;
             color: var(--text-main);
             background:
