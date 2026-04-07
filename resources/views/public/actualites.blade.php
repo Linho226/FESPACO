@@ -14,8 +14,16 @@
         <span class="news-count">{{ $actualites->total() }} publication(s)</span>
     </header>
 
+    <form method="GET" action="{{ route('public.actualites') }}" class="news-filters" aria-label="Filtrer les actualites par date">
+        <a href="{{ route('public.actualites') }}" class="news-filter-chip{{ ($period ?? 'toutes') === 'toutes' ? ' is-active' : '' }}">Toutes</a>
+        <button type="submit" name="periode" value="aujourdhui" class="news-filter-chip{{ ($period ?? 'toutes') === 'aujourdhui' ? ' is-active' : '' }}">Aujourd'hui</button>
+        <button type="submit" name="periode" value="hier" class="news-filter-chip{{ ($period ?? 'toutes') === 'hier' ? ' is-active' : '' }}">Hier</button>
+        <button type="submit" name="periode" value="recentes" class="news-filter-chip{{ ($period ?? 'toutes') === 'recentes' ? ' is-active' : '' }}">Récentes</button>
+        <button type="submit" name="periode" value="semaine" class="news-filter-chip{{ ($period ?? 'toutes') === 'semaine' ? ' is-active' : '' }}">7 derniers jours</button>
+    </form>
+
     @if($actualites->count() === 0)
-        <div class="news-empty">Aucune actualite pour le moment.</div>
+        <div class="news-empty">{{ ($period ?? 'toutes') === 'toutes' ? 'Aucune actualite pour le moment.' : 'Aucune actualite ne correspond a cette periode.' }}</div>
     @else
         <section class="news-grid">
             @foreach($actualites as $index => $actualite)
@@ -30,6 +38,7 @@
                         @if($index === 0)
                             <span class="news-topline">A la une</span>
                         @endif
+ 
 
                         <p class="news-meta">
                             {{ \Carbon\Carbon::parse($actualite->date_publication)->format('d/m/Y') }}

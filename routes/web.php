@@ -15,21 +15,26 @@ use App\Http\Controllers\Admin\ContactMessageController;
 use App\Http\Controllers\Admin\UserController;
 
 // --- Routes publiques ---
-Route::get('/', [PublicController::class, 'home'])->name('public.home');
-Route::get('/films', [PublicController::class, 'films'])->name('public.films');
-Route::get('/realisateurs-acteurs', [PublicController::class, 'realisateursActeurs'])->name('public.realisateurs_acteurs');
-Route::get('/realisateurs/{realisateur}', [PublicController::class, 'realisateur'])->name('public.realisateurs.show');
-Route::get('/acteurs/{acteur}', [PublicController::class, 'acteur'])->name('public.acteurs.show');
-Route::get('/projections', [PublicController::class, 'projections'])->name('public.projections');
-Route::get('/projections/{projection}/visionner', [PublicController::class, 'visionner'])->name('public.projections.visionner');
-Route::get('/projections/{projection}/etat', [PublicController::class, 'projectionStatus'])->name('public.projections.status');
-Route::get('/actualites', [PublicController::class, 'actualites'])->name('public.actualites');
-Route::get('/actualites/{actualite}', [PublicController::class, 'actualite'])->name('public.actualites.show');
-Route::get('/galerie', [GalerieController::class, 'publicIndex'])->name('galerie.index');
-Route::get('/galerie/{galerie}', [GalerieController::class, 'show'])->name('galerie.show');
-Route::get('/a-propos', [PublicController::class, 'aPropos'])->name('public.a_propos');
-Route::get('/contact', [PublicController::class, 'contact'])->name('public.contact');
-Route::post('/contact', [PublicController::class, 'sendContact'])->name('public.contact.send');
+Route::middleware('public.user')->group(function () {
+    Route::get('/', [PublicController::class, 'home'])->name('public.home');
+    Route::get('/films', [PublicController::class, 'films'])->name('public.films');
+    Route::get('/realisateurs-acteurs', [PublicController::class, 'realisateursActeurs'])->name('public.realisateurs_acteurs');
+    Route::get('/realisateurs/{realisateur}', [PublicController::class, 'realisateur'])->name('public.realisateurs.show');
+    Route::get('/acteurs/{acteur}', [PublicController::class, 'acteur'])->name('public.acteurs.show');
+    Route::get('/projections', [PublicController::class, 'projections'])->name('public.projections');
+    Route::get('/projections/alerte-demarrage', [PublicController::class, 'imminentProjectionAlert'])->name('public.projections.imminent-alert');
+    Route::get('/projections/alerte-en-cours', [PublicController::class, 'liveProjectionAlert'])->name('public.projections.live-alert');
+    Route::get('/projections/{projection}/terminee', [PublicController::class, 'projectionFinished'])->name('public.projections.finished');
+    Route::get('/projections/{projection}/visionner', [PublicController::class, 'visionner'])->name('public.projections.visionner');
+    Route::get('/projections/{projection}/etat', [PublicController::class, 'projectionStatus'])->name('public.projections.status');
+    Route::get('/actualites', [PublicController::class, 'actualites'])->name('public.actualites');
+    Route::get('/actualites/{actualite}', [PublicController::class, 'actualite'])->name('public.actualites.show');
+    Route::get('/galerie', [GalerieController::class, 'publicIndex'])->name('galerie.index');
+    Route::get('/galerie/{galerie}', [GalerieController::class, 'show'])->name('galerie.show');
+    Route::get('/a-propos', [PublicController::class, 'aPropos'])->name('public.a_propos');
+    Route::get('/contact', [PublicController::class, 'contact'])->name('public.contact');
+    Route::post('/contact', [PublicController::class, 'sendContact'])->name('public.contact.send');
+});
 
 // --- Routes admin (auth + admin) ---
 Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.')->group(function () {

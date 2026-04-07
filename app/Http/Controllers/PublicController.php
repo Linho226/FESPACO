@@ -26,10 +26,23 @@ class PublicController extends Controller
         return view('public.home', compact('filmsCount'));
     }
 
-    public function films()
+    public function films(Request $request)
     {
-        $films = Film::orderBy('created_at', 'desc')->paginate(12); // récupère tous les films
-        return view('public.films', compact('films')); // envoie à la vue
+        $search = trim((string) $request->input('q', ''));
+
+        $filmsQuery = Film::query()->orderBy('created_at', 'desc');
+
+        if ($search !== '') {
+            $filmsQuery->where(function ($query) use ($search) {
+                $query->where('titre', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhere('pays', 'like', "%{$search}%");
+            });
+        }
+
+        $films = $filmsQuery->paginate(12)->withQueryString();
+
+        return view('public.films', compact('films', 'search'));
     }
 
     public function realisateursActeurs(Request $request)
@@ -227,6 +240,10 @@ class PublicController extends Controller
         $watchState = $this->getProjectionWatchState($projection);
 
         if (!$watchState['can_watch']) {
+            if ($projection->estTerminee()) {
+                return redirect()->route('public.projections.finished', $projection);
+            }
+
             return redirect()->route('public.projections')->with('warning', $watchState['message']);
         }
 
@@ -364,8 +381,157 @@ class PublicController extends Controller
             'status' => $etat['label'],
             'badge' => $etat['badge'],
             'icon' => $etat['icon'],
+            'finished_redirect_url' => $projection->estTerminee()
+                ? route('public.projections.finished', $projection)
+                : null,
             'paused_since' => $pausedSince?->toIso8601String(),
             'paused_elapsed_seconds' => $pausedSince ? $pausedSince->diffInSeconds(now()) : null,
+        ]);
+    }
+
+    public function projectionFinished(Projection $projection)
+    {
+        if (!$projection->publie) {
+            abort(404);
+        }
+
+        if (!$projection->estTerminee()) {
+            return redirect()->route('public.projections.visionner', $projection);
+        }
+
+        $availableProjections = Projection::with(['film.galeries' => function ($query) {
+                $query->where('type_media', 'video')
+                    ->where(function ($q) {
+                        $q->whereNotNull('fichier')
+                            ->orWhere(function ($q2) {
+                                $q2->whereNotNull('lien')
+                                    ->where('lien', '!=', '');
+                            });
+                    });
+            }])
+            ->where('publie', true)
+            ->orderBy('date')
+            ->orderBy('heure')
+            ->get()
+            ->filter(function (Projection $candidate) use ($projection) {
+                return $candidate->id !== $projection->id
+                    && !$candidate->estTerminee()
+                    && $this->projectionHasWatchableMedia($candidate);
+            })
+            ->sortBy(function (Projection $candidate) {
+                $priority = match (true) {
+                    $candidate->estEnCours() => 0,
+                    $candidate->estAVenir() => 1,
+                    $candidate->estArreteeManuellement() => 2,
+                    default => 3,
+                };
+
+                return [$priority, $candidate->dateHeure()->timestamp];
+            })
+            ->take(3)
+            ->values();
+
+        return view('public.projection-finished', [
+            'projection' => $projection,
+            'availableProjections' => $availableProjections,
+        ]);
+    }
+
+    public function imminentProjectionAlert()
+    {
+        $now = now();
+        $windowEnd = $now->copy()->addMinute();
+
+        $projection = Projection::with(['film.galeries' => function ($query) {
+                $query->where('type_media', 'video')
+                    ->where(function ($q) {
+                        $q->whereNotNull('fichier')
+                            ->orWhere(function ($q2) {
+                                $q2->whereNotNull('lien')
+                                    ->where('lien', '!=', '');
+                            });
+                    });
+            }])
+            ->where('publie', true)
+            ->whereDate('date', '>=', $now->toDateString())
+            ->orderBy('date')
+            ->orderBy('heure')
+            ->get()
+            ->first(function (Projection $candidate) use ($now, $windowEnd) {
+                if (!$candidate->estAVenir()) {
+                    return false;
+                }
+
+                if (!$this->projectionHasWatchableMedia($candidate)) {
+                    return false;
+                }
+
+                $startsAt = $candidate->dateHeure();
+
+                return $startsAt->gte($now) && $startsAt->lte($windowEnd);
+            });
+
+        if (!$projection) {
+            return response()->json([
+                'should_alert' => false,
+            ]);
+        }
+
+        $watchUrl = auth()->check()
+            ? route('public.projections.visionner', $projection)
+            : route('login', ['redirect' => route('public.projections.visionner', $projection, false)]);
+
+        return response()->json([
+            'should_alert' => true,
+            'projection_id' => $projection->id,
+            'projection_title' => $projection->getTitreAffiche(),
+            'starts_at' => $projection->dateHeure()->toIso8601String(),
+            'starts_in_seconds' => max(0, $now->diffInSeconds($projection->dateHeure(), false)),
+            'location' => $projection->lieu,
+            'watch_url' => $watchUrl,
+        ]);
+    }
+
+    public function liveProjectionAlert()
+    {
+        if (!auth()->check() || auth()->user()->isAdmin()) {
+            return response()->json([
+                'should_alert' => false,
+            ]);
+        }
+
+        $projection = Projection::with(['film.galeries' => function ($query) {
+                $query->where('type_media', 'video')
+                    ->where(function ($q) {
+                        $q->whereNotNull('fichier')
+                            ->orWhere(function ($q2) {
+                                $q2->whereNotNull('lien')
+                                    ->where('lien', '!=', '');
+                            });
+                    });
+            }])
+            ->where('publie', true)
+            ->orderBy('date')
+            ->orderBy('heure')
+            ->get()
+            ->first(function (Projection $candidate) {
+                return $candidate->estEnCours() && $this->projectionHasWatchableMedia($candidate);
+            });
+
+        if (!$projection) {
+            return response()->json([
+                'should_alert' => false,
+            ]);
+        }
+
+        return response()->json([
+            'should_alert' => true,
+            'projection_id' => $projection->id,
+            'projection_title' => $projection->getTitreAffiche(),
+            'started_at' => $projection->referenceDebutReel()?->toIso8601String(),
+            'started_since_seconds' => max(0, $projection->tempsEcouleSecondes()),
+            'location' => $projection->lieu,
+            'watch_url' => route('public.projections.visionner', $projection),
         ]);
     }
 
@@ -453,10 +619,66 @@ class PublicController extends Controller
         ];
     }
 
-    public function actualites()
+    private function projectionHasWatchableMedia(Projection $projection): bool
     {
-        $actualites = \App\Models\Actualite::with('auteur')->orderByDesc('date_publication')->paginate(10);
-        return view('public.actualites', compact('actualites'));
+        $film = $projection->film;
+
+        if (!$film) {
+            return false;
+        }
+
+        $allMedias = collect($film->galeries ?? [])
+            ->filter(fn ($media) => $media->type_media === 'video')
+            ->filter(fn ($media) => !empty($media->fichier) || !empty($media->lien))
+            ->values();
+
+        if ($projection->media_selection_mode === 'specific' && !empty($projection->selected_media_ids)) {
+            return $allMedias->whereIn('id', $projection->selected_media_ids)->isNotEmpty();
+        }
+
+        return $allMedias->isNotEmpty();
+    }
+
+    public function actualites(Request $request)
+    {
+        $period = (string) $request->input('periode', 'toutes');
+
+        $actualitesQuery = \App\Models\Actualite::with('auteur');
+
+        switch ($period) {
+            case 'aujourdhui':
+                $actualitesQuery->whereDate('date_publication', now()->toDateString());
+                break;
+
+            case 'hier':
+                $actualitesQuery->whereDate('date_publication', now()->copy()->subDay()->toDateString());
+                break;
+
+            case 'recentes':
+                $actualitesQuery->whereBetween('date_publication', [
+                    now()->copy()->subDays(2)->startOfDay(),
+                    now()->copy()->endOfDay(),
+                ]);
+                break;
+
+            case 'semaine':
+                $actualitesQuery->whereBetween('date_publication', [
+                    now()->copy()->subDays(6)->startOfDay(),
+                    now()->copy()->endOfDay(),
+                ]);
+                break;
+
+            default:
+                $period = 'toutes';
+                break;
+        }
+
+        $actualites = $actualitesQuery
+            ->orderByDesc('date_publication')
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('public.actualites', compact('actualites', 'period'));
     }
 
         public function actualite(\App\Models\Actualite $actualite)

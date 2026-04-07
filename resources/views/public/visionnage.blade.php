@@ -5,201 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Visionnage - FESPACO</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-                [data-bs-theme="dark"] .pause-counter {
-                    background: #3a2e00 !important;
-                    color: #ffe066 !important;
-                    border-color: #ffe066 !important;
-                }
-                [data-bs-theme="dark"] .pause-dot {
-                    background: #ffe066 !important;
-                }
-        :root {
-            --primary: #006241;
-            --danger: #e63946;
-        }
-        
-        * { box-sizing: border-box; }
-        body { 
-            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 100%);
-            color: #f0f0f0;
-            min-height: 100vh;
-        }
-        
-        .player-card { 
-            border: none;
-            border-radius: 16px;
-            box-shadow: 0 10px 40px rgba(0,0,0,.3);
-            background: rgba(255,255,255,.02);
-            border: 1px solid rgba(255,255,255,.1);
-            backdrop-filter: blur(10px);
-        }
-        
-        .player-header {
-            border-bottom: 1px solid rgba(255,255,255,.1);
-            padding-bottom: 1.5rem !important;
-        }
-        
-        .player-title {
-            font-size: 1.75rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #fff, #d0d0d0);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .subtitle-text {
-            color: rgba(255,255,255,.7) !important;
-            font-size: 0.95rem;
-        }
-        
-        .status-badge {
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            padding: 0.6rem 1.2rem !important;
-            border-radius: 50px !important;
-            font-size: 0.85rem;
-        }
-        
-        .pause-counter {
-            border-radius: 12px;
-            border: 1px solid rgba(255, 193, 7, .3);
-            background: rgba(255, 193, 7, .08);
-            padding: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        
-        .pause-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #ffc107;
-            display: inline-block;
-            margin-right: 0.5rem;
-            animation: pulsePause 1.2s infinite;
-        }
-        
-        @keyframes pulsePause {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.4); opacity: 0.5; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-        
-        .readonly-iframe-wrap {
-            position: relative;
-            border-radius: 12px;
-            overflow: hidden;
-            background: #000;
-        }
-        
-        .readonly-iframe-wrap iframe {
-            pointer-events: none;
-        }
-        
-        .readonly-iframe-shield {
-            position: absolute;
-            inset: 0;
-            z-index: 2;
-            background: transparent;
-            cursor: not-allowed;
-        }
-        
-        .media-info {
-            background: rgba(255,255,255,.05);
-            border: 1px solid rgba(255,255,255,.1);
-            border-radius: 12px;
-            padding: 1.25rem;
-            margin-top: 1.5rem;
-            backdrop-filter: blur(10px);
-        }
-        
-        .media-info h6 {
-            color: #fff;
-            font-weight: 600;
-            margin-bottom: 0.75rem;
-        }
-        
-        .sound-btn {
-            background: var(--primary);
-            border-color: var(--primary);
-            color: white;
-            font-weight: 500;
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-        }
-        
-        .sound-btn:hover:not(:disabled) {
-            background: #00582f;
-            border-color: #00582f;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 98, 65, 0.3);
-        }
-        
-        .sound-btn:disabled {
-            opacity: 0.6;
-            cursor: default;
-        }
-        
-        .medias-section {
-            border-top: 1px solid rgba(255,255,255,.1);
-            padding-top: 2rem;
-            margin-top: 2rem;
-        }
-        
-        .medias-section h6 {
-            color: #fff;
-            font-weight: 600;
-            margin-bottom: 1.25rem;
-            font-size: 1.1rem;
-        }
-        
-        .sequence-note {
-            background: rgba(255,255,255,.04);
-            border: 1px solid rgba(255,255,255,.12);
-            border-radius: 12px;
-            padding: 1rem 1.25rem;
-            color: rgba(255,255,255,.85);
-        }
-        
-        .next-video-alert {
-            background: rgba(0, 98, 65, .1);
-            border: 1px solid rgba(0, 98, 65, .3);
-            border-radius: 12px;
-            padding: 1.25rem;
-            margin-top: 1.5rem;
-        }
-        
-        .countdown-circle {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: var(--primary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 1.25rem;
-            color: white;
-        }
-        
-        .back-link {
-            color: rgba(255,255,255,.7);
-            text-decoration: none;
-            font-weight: 500;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 1.5rem;
-            transition: all 0.3s ease;
-        }
-        
-        .back-link:hover {
-            color: white;
-            margin-left: -4px;
-        }
-    </style>
+    <link href="/css/public/visionnage.css" rel="stylesheet">
 </head>
 <body>
 @include('public.navbar')
@@ -216,7 +22,7 @@
                     <div>
                         <h2 class="player-title">{{ $projection->getTitreAffiche() }}</h2>
                         <p class="subtitle-text mb-0">
-                            <strong>{{ $projection->date->format('d/m/Y') }}</strong> à <strong>{{ \Carbon\Carbon::parse($projection->heure)->format('H\hi') }}</strong>
+                            <strong>{{ $projection->date->format('d/m/Y') }}</strong> à <strong>{{ \Carbon\Carbon::parse($projection->heure)->format('H\hi:s') }}</strong>
                             • {{ $projection->lieu }}
                         </p>
                     </div>
@@ -354,6 +160,11 @@
 
     const statusUrl = @json(route('public.projections.status', $projection));
     const projectionsUrl = @json(route('public.projections'));
+    const finishedProjectionUrl = @json(route('public.projections.finished', $projection));
+    const projectionWatchUrl = @json(route('public.projections.visionner', $projection));
+    const projectionTitle = @json($projection->getTitreAffiche());
+    const projectionId = Number(@json($projection->id));
+    const projectionResumeNoticeStorageKey = 'fespaco_projection_resume_notice';
     const playbackOffsetSeconds = Number(@json($playbackOffsetSeconds ?? 0)) || 0;
     const medias = @json($medias);
     const activeMediaId = @json($activeMedia['id'] ?? null);
@@ -377,6 +188,47 @@
     let pauseTimerInterval = null;
     let nextVideoCountdown = null;
     let nextVideoStartTimer = null;
+
+    function readProjectionResumeNotice() {
+        try {
+            const raw = window.localStorage.getItem(projectionResumeNoticeStorageKey);
+            if (!raw) return null;
+            const parsed = JSON.parse(raw);
+            return parsed && typeof parsed === 'object' ? parsed : null;
+        } catch (error) {
+            return null;
+        }
+    }
+
+    function writeProjectionResumeNotice(payload) {
+        try {
+            window.localStorage.setItem(projectionResumeNoticeStorageKey, JSON.stringify(payload));
+        } catch (error) {
+            console.warn('Impossible de sauvegarder la projection en pause.', error);
+        }
+    }
+
+    function clearProjectionResumeNotice() {
+        const currentNotice = readProjectionResumeNotice();
+        if (!currentNotice || Number(currentNotice.projectionId) !== projectionId) return;
+
+        try {
+            window.localStorage.removeItem(projectionResumeNoticeStorageKey);
+        } catch (error) {
+            console.warn('Impossible de nettoyer la projection en pause.', error);
+        }
+    }
+
+    function rememberPausedProjection() {
+        writeProjectionResumeNotice({
+            projectionId,
+            projectionTitle,
+            watchUrl: projectionWatchUrl,
+            statusUrl,
+            pausedAt: new Date().toISOString(),
+            resumeReady: false,
+        });
+    }
 
     function enableEmbedSound() {
         if (!embedPlayer || !embedProvider) return false;
@@ -564,10 +416,12 @@
                 stopPauseCounter();
             }
             if (data.can_watch && playerStopped) {
+                clearProjectionResumeNotice();
                 window.location.reload();
                 return;
             }
             if (data.can_watch) {
+                clearProjectionResumeNotice();
                 if (statusAlert) statusAlert.classList.add('d-none');
                 if (html5Video && html5Video.paused && projectionForcedStop) {
                     projectionForcedStop = false;
@@ -575,6 +429,16 @@
                 }
             }
             if (!data.can_watch) {
+                if (data.status === 'Terminée') {
+                    window.location.href = data.finished_redirect_url || finishedProjectionUrl;
+                    return;
+                }
+
+                if (data.status === 'Arrêtée') {
+                    rememberPausedProjection();
+                } else {
+                    clearProjectionResumeNotice();
+                }
                 if (statusAlert) {
                     statusAlert.textContent = data.message;
                     statusAlert.className = `alert ${getAlertClass(data.status)}`;

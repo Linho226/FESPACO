@@ -14,6 +14,19 @@
         <span class="films-count">{{ $films->total() }} film(s)</span>
     </div>
 
+    <div class="films-search-card mb-4">
+        <form method="GET" action="{{ route('public.films') }}" class="row g-2 align-items-center">
+            <div class="col-12 col-lg-9">
+                <label for="films-search-input" class="visually-hidden">Rechercher un film</label>
+                <input id="films-search-input" type="text" name="q" class="form-control films-search-input" placeholder="Rechercher par titre, description ou pays..." value="{{ $search ?? '' }}">
+            </div>
+            <div class="col-12 col-lg-3 d-flex gap-2">
+                <button type="submit" class="btn films-search-btn flex-grow-1">Rechercher</button>
+                <a href="{{ route('public.films') }}" class="btn films-reset-btn flex-grow-1">Réinitialiser</a>
+            </div>
+        </form>
+    </div>
+
     <div class="row g-4">
         @forelse($films as $film)
             <div class="col-12 col-sm-6 col-lg-4 col-xl-3 d-flex align-items-stretch">
@@ -40,7 +53,7 @@
         @empty
             <div class="col-12">
                 <div class="empty-films">
-                    Aucun film pour le moment.
+                    {{ ($search ?? '') !== '' ? 'Aucun film ne correspond à votre recherche.' : 'Aucun film pour le moment.' }}
                 </div>
             </div>
         @endforelse

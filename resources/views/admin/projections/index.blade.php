@@ -46,7 +46,7 @@
                             <div>
                                 <strong>{{ $alerte->getTitreAffiche() }}</strong>
                                 — {{ $alerte->lieu }}
-                                — débutée à {{ \Carbon\Carbon::parse($alerte->heure)->format('H\hi') }}
+                                — débutée à {{ \Carbon\Carbon::parse($alerte->heure)->format('H\hi:s') }}
                                 @if($dureeSecondes > 0)
                                     — durée {{ $dureeLabel }} — fin prévue {{ $finPrevue }}
                                 @endif
@@ -70,12 +70,13 @@
                                 $diffTotal  = now()->diff($alerte->dateHeure());
                                 $diffHeures = $diffTotal->h + ($diffTotal->days * 24);
                                 $diffMins   = $diffTotal->i;
+                                $diffSecs   = $diffTotal->s;
                             @endphp
-                            <strong>Projection imminente dans {{ $diffHeures }}h{{ $diffMins > 0 ? $diffMins.'min' : '' }} !</strong>
+                            <strong>Projection imminente dans {{ $diffHeures }}h{{ str_pad((string) $diffMins, 2, '0', STR_PAD_LEFT) }}min{{ str_pad((string) $diffSecs, 2, '0', STR_PAD_LEFT) }} !</strong>
                             <div>
                                 <strong>{{ $alerte->getTitreAffiche() }}</strong>
                                 — {{ $alerte->lieu }}
-                                — le {{ $alerte->date->format('d/m/Y') }} à {{ \Carbon\Carbon::parse($alerte->heure)->format('H\hi') }}
+                                — le {{ $alerte->date->format('d/m/Y') }} à {{ \Carbon\Carbon::parse($alerte->heure)->format('H\hi:s') }}
                                 @if($dureeSecondes > 0)
                                     — durée {{ $dureeLabel }} — fin prévue {{ $finPrevue }}
                                 @endif
@@ -130,7 +131,7 @@
                 <tr class="{{ $projection->estEnCours() ? 'table-success' : ($projection->approcheImminente() ? 'table-warning' : '') }}">
                     <td><strong>{{ $projection->getTitreAffiche() }}</strong></td>
                     <td>{{ $projection->date->format('d/m/Y') }}</td>
-                    <td>{{ \Carbon\Carbon::parse($projection->heure)->format('H\hi') }}</td>
+                    <td>{{ \Carbon\Carbon::parse($projection->heure)->format('H\hi:s') }}</td>
                     <td>
                         {{ \App\Models\Film::formatterDureeSecondes($dureeSecondes) }}
                     </td>
@@ -148,9 +149,10 @@
                                 $diffTotal  = now()->diff($projection->dateHeure());
                                 $diffHeures = $diffTotal->h + ($diffTotal->days * 24);
                                 $diffMins   = $diffTotal->i;
+                                $diffSecs   = $diffTotal->s;
                             @endphp
                             <br><small class="text-danger fw-bold">
-                                ⚠️ Dans {{ $diffHeures }}h{{ $diffMins > 0 ? $diffMins.'min' : '' }}
+                                ⚠️ Dans {{ $diffHeures }}h{{ str_pad((string) $diffMins, 2, '0', STR_PAD_LEFT) }}min{{ str_pad((string) $diffSecs, 2, '0', STR_PAD_LEFT) }}
                             </small>
                         @endif
                     </td>

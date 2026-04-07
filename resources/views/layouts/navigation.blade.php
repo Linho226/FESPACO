@@ -98,3 +98,5 @@
         </div>
     </div>
 </nav>
+
+@include('partials.projection-resume-alert')

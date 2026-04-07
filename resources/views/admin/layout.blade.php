@@ -517,6 +517,8 @@
     </style>
 </head>
 <body>
+    @include('partials.projection-resume-alert')
+
     <div class="admin-mobile-topbar d-lg-none">
         <span class="fw-bold">FESPACO Admin</span>
         <button class="btn btn-outline-light btn-sm" type="button" data-bs-toggle="offcanvas" data-bs-target="#adminSidebarMobile" aria-controls="adminSidebarMobile">Menu</button>
