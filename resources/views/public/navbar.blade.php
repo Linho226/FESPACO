@@ -1,3 +1,4 @@
+<link rel="stylesheet" href="/css/public/navbar.css">
 <style>
   :root {
     --nav-bg: rgba(21, 27, 36, 0.9);
@@ -181,6 +182,14 @@
     align-items: center;
     justify-content: flex-end;
     flex: 1 1 auto;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .fespaco-navbar-desktop::-webkit-scrollbar {
+    display: none;
   }
 
   .fespaco-mobile-drawer {

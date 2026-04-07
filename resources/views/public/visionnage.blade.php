@@ -6,6 +6,14 @@
     <title>Visionnage - FESPACO</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
+                [data-bs-theme="dark"] .pause-counter {
+                    background: #3a2e00 !important;
+                    color: #ffe066 !important;
+                    border-color: #ffe066 !important;
+                }
+                [data-bs-theme="dark"] .pause-dot {
+                    background: #ffe066 !important;
+                }
         :root {
             --primary: #006241;
             --danger: #e63946;

@@ -60,7 +60,7 @@
             </div>
 
             <div id="projection-status-alert" class="alert alert-warning d-none" role="alert"></div>
-            <div id="projection-pause-counter" class="pause-counter d-none mb-3">
+            <div id="projection-pause-counter" class="pause-counter mb-3">
                 <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
                     <div class="small text-dark fw-semibold"><span class="pause-dot"></span>Projection en pause · reprise imminente</div>
                     <div class="small text-dark">Pause depuis <strong id="pause-elapsed">00:00</strong></div>

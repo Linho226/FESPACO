@@ -18,6 +18,10 @@ class PublicController extends Controller
 
     public function home()
     {
+        // Si l'utilisateur est connecté et admin, on le redirige vers le dashboard admin
+        if (auth()->check() && auth()->user()->isAdmin()) {
+            return redirect()->route('admin.dashboard');
+        }
         $filmsCount = Film::count();
         return view('public.home', compact('filmsCount'));
     }
