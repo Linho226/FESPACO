@@ -8,6 +8,7 @@ use App\Models\Projection;
 use App\Models\AttendanceRecord;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
 
 class ProjectionController extends Controller
@@ -231,9 +232,172 @@ class ProjectionController extends Controller
             ->with('success', "Projection « {$projection->film->titre} » mise en pause. Fréquentation enregistrée.");
     }
 
+    /**
+     * Visionnage privé d'une projection pour l'admin.
+     */
+    public function visionner(Request $request, Projection $projection): View|RedirectResponse
+    {
+        $projection->load('film.galeries');
+
+        if (!$this->projectionHasWatchableMedia($projection)) {
+            return redirect()->route('admin.projections.index')
+                ->with('warning', 'Aucun média vidéo exploitable n’est disponible pour cette projection.');
+        }
+
+        if ($projection->estTerminee()) {
+            return redirect()->route('admin.projections.index')
+                ->with('warning', "La projection « {$projection->getTitreAffiche()} » est déjà terminée.");
+        }
+
+        if (!$projection->estEnCours() && !$projection->estArreteeManuellement()) {
+            return redirect()->route('admin.projections.index')
+                ->with('warning', "La projection « {$projection->getTitreAffiche()} » n’a pas encore commencé.");
+        }
+
+        $projection->registerActiveViewer((int) $request->user()->id);
+
+        $film = $projection->film;
+        $playbackOffsetSeconds = max(0, (int) $projection->tempsEcouleSecondes());
+
+        $allMedias = collect($film?->galeries ?? [])
+            ->filter(fn ($media) => $media->type_media === 'video')
+            ->sortBy(fn ($media) => $media->created_at?->timestamp ?? $media->id)
+            ->values();
+
+        if ($projection->media_selection_mode === 'specific' && !empty($projection->selected_media_ids)) {
+            $selectedIds = $projection->selected_media_ids;
+            $medias = $allMedias
+                ->whereIn('id', $selectedIds)
+                ->values()
+                ->sort(function ($a, $b) use ($selectedIds) {
+                    return array_search($a->id, $selectedIds) <=> array_search($b->id, $selectedIds);
+                })
+                ->values();
+        } else {
+            $medias = $allMedias;
+        }
+
+        $medias = $medias
+            ->map(function ($media) {
+                $fichierUrl = $media->fichier ? asset('storage/'.$media->fichier) : null;
+                $embedUrl = $this->toEmbedUrl($media->lien, 0);
+                $embedProvider = $this->detectEmbedProvider($media->lien);
+
+                return [
+                    'id' => $media->id,
+                    'titre' => $media->titre,
+                    'description' => $media->description,
+                    'date' => $media->date,
+                    'duree_secondes' => (int) ($media->duree_secondes ?? 0),
+                    'kind' => 'video',
+                    'fichier_url' => $fichierUrl,
+                    'lien' => $media->lien,
+                    'embed_url' => $embedUrl,
+                    'embed_provider' => $embedProvider,
+                    'has_video_source' => !empty($fichierUrl) || !empty($media->lien),
+                ];
+            })
+            ->filter(fn ($media) => $media['has_video_source'])
+            ->values();
+
+        $activeMedia = null;
+        $playbackOffsetInActiveMedia = 0;
+        $autoNext = $request->boolean('autonext');
+        $fromMediaId = (int) $request->query('from_media', 0);
+
+        if ($medias->isNotEmpty() && $autoNext && $fromMediaId > 0) {
+            $fromIndex = $medias->search(fn ($media) => (int) ($media['id'] ?? 0) === $fromMediaId);
+
+            if ($fromIndex !== false) {
+                $nextMedia = $medias->get($fromIndex + 1);
+                if ($nextMedia) {
+                    $activeMedia = $nextMedia;
+                    $playbackOffsetInActiveMedia = 0;
+                }
+            }
+        }
+
+        if (!$activeMedia && $medias->isNotEmpty()) {
+            $elapsed = max(0, $playbackOffsetSeconds);
+            $cursor = 0;
+
+            foreach ($medias as $media) {
+                $duration = max(0, (int) ($media['duree_secondes'] ?? 0));
+
+                if ($duration <= 0) {
+                    $activeMedia = $media;
+                    $playbackOffsetInActiveMedia = 0;
+                    break;
+                }
+
+                if ($elapsed < ($cursor + $duration)) {
+                    $activeMedia = $media;
+                    $playbackOffsetInActiveMedia = max(0, $elapsed - $cursor);
+                    break;
+                }
+
+                $cursor += $duration;
+            }
+
+            if (!$activeMedia) {
+                $activeMedia = $medias->last();
+                $lastDuration = max(0, (int) ($activeMedia['duree_secondes'] ?? 0));
+                $playbackOffsetInActiveMedia = $lastDuration > 0 ? max(0, $lastDuration - 1) : 0;
+            }
+        }
+
+        if ($activeMedia && !empty($activeMedia['lien'])) {
+            $activeMedia['embed_url'] = $this->toEmbedUrl($activeMedia['lien'], $playbackOffsetInActiveMedia);
+        }
+
+        return view('public.visionnage', [
+            'projection' => $projection,
+            'film' => $film,
+            'medias' => $medias,
+            'activeMedia' => $activeMedia,
+            'playbackOffsetSeconds' => $playbackOffsetInActiveMedia,
+            'showPublicChrome' => false,
+            'backUrl' => route('admin.projections.index'),
+            'statusUrl' => route('admin.projections.status', $projection),
+            'finishedProjectionUrl' => route('admin.projections.index'),
+            'projectionWatchUrl' => route('admin.projections.visionner', $projection),
+        ]);
+    }
+
+    /**
+     * Statut temps réel d'une projection pour le lecteur admin.
+     */
+    public function projectionStatus(Request $request, Projection $projection): JsonResponse
+    {
+        $state = $this->getProjectionWatchState($projection);
+
+        if ($state['can_watch'] && $request->user()) {
+            $projection->registerActiveViewer((int) $request->user()->id);
+        }
+
+        $etat = $projection->etat();
+        $pausedSince = $projection->estArreteeManuellement() && $projection->fin_at
+            ? $projection->fin_at->copy()
+            : null;
+
+        return response()->json([
+            'can_watch' => $state['can_watch'],
+            'message' => $state['message'],
+            'status' => $etat['label'],
+            'badge' => $etat['badge'],
+            'icon' => $etat['icon'],
+            'finished_redirect_url' => $projection->estTerminee()
+                ? route('admin.projections.index')
+                : null,
+            'paused_since' => $pausedSince?->toIso8601String(),
+            'paused_elapsed_seconds' => $pausedSince ? $pausedSince->diffInSeconds(now()) : null,
+        ]);
+    }
+
     private function detectConflitSalle(array $data, ?int $excludeId = null): ?Projection
     {
         // Calcule l'intervalle horaire de la projection à créer/modifier.
+        /** @var Film|null $film */
         $film = Film::find($data['film_id']);
         $dureeCouranteSecondes = $film ? $film->dureeSecondesReelle() : 60;
 
@@ -247,6 +411,7 @@ class ProjectionController extends Controller
             $query->where('id', '!=', $excludeId);
         }
 
+        /** @var \Illuminate\Support\Collection<int, Projection> $existantes */
         $existantes = $query->get();
 
         foreach ($existantes as $projection) {
@@ -274,6 +439,7 @@ class ProjectionController extends Controller
      */
     private function processMediaSelection(array &$data): void
     {
+        /** @var Film|null $film */
         $film = Film::find($data['film_id']);
         if (!$film) {
             $data['media_selection_mode'] = 'all';
@@ -305,6 +471,108 @@ class ProjectionController extends Controller
             // Store selected media IDs as provided
             $data['selected_media_ids'] = $data['selected_media_ids'] ?? [];
         }
+    }
+
+    private function toEmbedUrl(?string $url, int $startAtSeconds = 0): ?string
+    {
+        if (!$url) {
+            return null;
+        }
+
+        $startAtSeconds = max(0, $startAtSeconds);
+        $youtubeStartParam = $startAtSeconds > 0 ? '&start='.$startAtSeconds : '';
+        $vimeoStartFragment = $startAtSeconds > 0 ? '#t='.$startAtSeconds.'s' : '';
+        $origin = urlencode(request()->getSchemeAndHttpHost());
+        $youtubeBaseParams = 'autoplay=1&mute=1&rel=0&controls=0&disablekb=1&modestbranding=1&playsinline=1&fs=0&enablejsapi=1&origin='.$origin;
+        $vimeoBaseParams = 'autoplay=1&muted=1&controls=0&keyboard=0&api=1&player_id=projection-embed-player';
+
+        if (preg_match('/youtube\.com\/watch\?v=([^&]+)/', $url, $matches)) {
+            return 'https://www.youtube.com/embed/' . $matches[1] . '?'.$youtubeBaseParams.$youtubeStartParam;
+        }
+
+        if (preg_match('/youtu\.be\/([^?&]+)/', $url, $matches)) {
+            return 'https://www.youtube.com/embed/' . $matches[1] . '?'.$youtubeBaseParams.$youtubeStartParam;
+        }
+
+        if (preg_match('/youtube\.com\/shorts\/([^?&]+)/', $url, $matches)) {
+            return 'https://www.youtube.com/embed/' . $matches[1] . '?'.$youtubeBaseParams.$youtubeStartParam;
+        }
+
+        if (preg_match('/vimeo\.com\/(\d+)/', $url, $matches)) {
+            return 'https://player.vimeo.com/video/' . $matches[1] . '?'.$vimeoBaseParams.$vimeoStartFragment;
+        }
+
+        return null;
+    }
+
+    private function detectEmbedProvider(?string $url): ?string
+    {
+        if (!$url) {
+            return null;
+        }
+
+        if (preg_match('/youtube\.com\/watch\?v=([^&]+)/', $url)
+            || preg_match('/youtu\.be\/([^?&]+)/', $url)
+            || preg_match('/youtube\.com\/shorts\/([^?&]+)/', $url)) {
+            return 'youtube';
+        }
+
+        if (preg_match('/vimeo\.com\/(\d+)/', $url)) {
+            return 'vimeo';
+        }
+
+        return 'other';
+    }
+
+    private function getProjectionWatchState(Projection $projection): array
+    {
+        $filmTitle = $projection->film?->titre ?? 'cette projection';
+
+        if ($projection->estEnCours()) {
+            return [
+                'can_watch' => true,
+                'message' => null,
+            ];
+        }
+
+        if ($projection->estArreteeManuellement()) {
+            return [
+                'can_watch' => false,
+                'message' => "La projection « {$filmTitle} » est actuellement en pause et reprendra dans quelques minutes.",
+            ];
+        }
+
+        if ($projection->estTerminee()) {
+            return [
+                'can_watch' => false,
+                'message' => "La projection « {$filmTitle} » est terminée.",
+            ];
+        }
+
+        return [
+            'can_watch' => false,
+            'message' => "La projection « {$filmTitle} » n’a pas encore commencé.",
+        ];
+    }
+
+    private function projectionHasWatchableMedia(Projection $projection): bool
+    {
+        $film = $projection->film;
+
+        if (!$film) {
+            return false;
+        }
+
+        $allMedias = collect($film->galeries ?? [])
+            ->filter(fn ($media) => $media->type_media === 'video')
+            ->filter(fn ($media) => !empty($media->fichier) || !empty($media->lien))
+            ->values();
+
+        if ($projection->media_selection_mode === 'specific' && !empty($projection->selected_media_ids)) {
+            return $allMedias->whereIn('id', $projection->selected_media_ids)->isNotEmpty();
+        }
+
+        return $allMedias->isNotEmpty();
     }
 }
 

@@ -5,10 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Film;
 use App\Models\Projection;
-use App\Models\AttendanceRecord;
 use App\Models\Actualite;
 use App\Models\Galerie;
-use Carbon\Carbon;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
@@ -40,11 +38,7 @@ class DashboardController extends Controller
                 ->orderByDesc('projections_count')
                 ->limit(5)
                 ->get(),
-            
-            // Fréquentation moyenne
-            'average_occupancy' => AttendanceRecord::avg('occupancy_rate') ?? 0,
-            'total_spectators' => AttendanceRecord::sum('spectators_count') ?? 0,
-            'attendance_records_count' => AttendanceRecord::count(),
+
             'ongoing_projections_count' => $ongoingProjections->count(),
             'connected_users_during_projections' => $ongoingProjections->sum(
                 fn (Projection $projection) => $projection->activeViewersCount()

@@ -4,12 +4,12 @@
 
 @section('content')
 <div class="container px-0 films-admin">
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4 mobile-page-header">
         <div>
             <h2 class="mb-1">Gestion des films</h2>
             <p class="text-muted mb-0">Ajoutez, recherchez et gérez tout le catalogue du festival.</p>
         </div>
-        <div class="d-flex gap-2 align-items-center">
+        <div class="d-flex gap-2 align-items-center flex-wrap mobile-actions-stack">
             <span class="badge bg-dark fs-6">{{ $films->total() }} film(s)</span>
             <a href="{{ route('admin.films.create') }}" class="btn btn-success">+ Ajouter un film</a>
         </div>
@@ -80,7 +80,7 @@
                                 {{ $film->type === 'serie' ? 'Série' : 'Film' }}
                             </span>
                         </td>
-                        <td class="text-end">
+                        <td class="text-end mobile-table-actions">
                             <div class="d-inline-flex gap-1 flex-wrap justify-content-end">
                                 <a href="{{ route('admin.films.show', $film) }}" class="btn btn-sm btn-outline-info">Voir</a>
                                 <a href="{{ route('admin.films.edit', $film) }}" class="btn btn-sm btn-outline-warning">Modifier</a>

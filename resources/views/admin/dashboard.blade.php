@@ -84,14 +84,6 @@
                 <div class="card-body">
                     <div class="frequency-stat">
                         <div class="frequency-item">
-                            <span class="frequency-label">Taux d'occupation moyen</span>
-                            <div class="frequency-progress">
-                                <div class="progress-bar" style="width: {{ min($stats['average_occupancy'], 100) }}%">
-                                    {{ number_format($stats['average_occupancy'], 1) }}%
-                                </div>
-                            </div>
-                        </div>
-                        <div class="frequency-item mt-3">
                             <span class="frequency-label">Utilisateurs connectés pendant une projection en cours</span>
                             <span class="frequency-value">{{ $stats['connected_users_during_projections'] }}</span>
                             <small class="text-muted d-block mt-1">{{ $stats['ongoing_projections_count'] }} projection(s) en cours</small>
@@ -233,8 +225,6 @@
     .frequency-stat { padding: 0; }
     .frequency-item { margin-bottom: 1rem; }
     .frequency-label { display: block; font-size: .9rem; color: var(--app-text); margin-bottom: .5rem; font-weight: 500; }
-    .frequency-progress { height: 28px; background: var(--table-zebra); border-radius: 8px; overflow: hidden; border: 1px solid var(--surface-border); }
-    .progress-bar { height: 100%; background: linear-gradient(90deg, #3b82f6, #22c55e); display: flex; align-items: center; justify-content: center; color: #fff; font-size: .85rem; font-weight: 600; transition: width .4s ease; }
     .frequency-value { display: block; font-size: 1.4rem; font-weight: 700; color: var(--app-text); }
 
     .most-projected-list { max-height: 400px; overflow-y: auto; }

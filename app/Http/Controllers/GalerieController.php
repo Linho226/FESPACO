@@ -13,6 +13,8 @@ class GalerieController extends Controller
     public function index(Request $request)
     {
         $filmId = $request->input('film_id');
+        $search = trim((string) $request->input('search', ''));
+
         // Charge le film lié pour l'affichage sans requêtes N+1.
         $query  = Galerie::with('film')->orderByDesc('created_at');
 
@@ -20,10 +22,21 @@ class GalerieController extends Controller
             $query->where('film_id', $filmId);
         }
 
+        if ($search !== '') {
+            $query->where(function ($builder) use ($search) {
+                $builder->where('titre', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhere('type_media', 'like', "%{$search}%")
+                    ->orWhereHas('film', function ($filmQuery) use ($search) {
+                        $filmQuery->where('titre', 'like', "%{$search}%");
+                    });
+            });
+        }
+
         $galeries = $query->paginate(12)->withQueryString();
         $films    = Film::orderBy('titre')->get();
 
-        return view('admin.galeries.index', compact('galeries', 'films', 'filmId'));
+        return view('admin.galeries.index', compact('galeries', 'films', 'filmId', 'search'));
     }
 
     public function create(Request $request)

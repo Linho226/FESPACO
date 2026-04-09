@@ -11,11 +11,27 @@ class ActualiteController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
+        $search = trim((string) $request->input('search', ''));
+
         // Charge l'auteur en eager loading pour éviter les requêtes N+1 dans la liste.
-        $actualites = Actualite::with('auteur')->orderByDesc('date_publication')->paginate(10);
-        return view('admin.actualites.index', compact('actualites'));
+        $query = Actualite::with('auteur')->orderByDesc('date_publication');
+
+        if ($search !== '') {
+            $query->where(function ($builder) use ($search) {
+                $builder->where('titre', 'like', "%{$search}%")
+                    ->orWhere('contenu', 'like', "%{$search}%")
+                    ->orWhereHas('auteur', function ($authorQuery) use ($search) {
+                        $authorQuery->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        $actualites = $query->paginate(10)->withQueryString();
+
+        return view('admin.actualites.index', compact('actualites', 'search'));
     }
 
     /**

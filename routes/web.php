@@ -2,7 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PublicController;
-use App\Http\Controllers\AdminController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\GalerieController;
 use App\Http\Controllers\ProfileController;
@@ -57,6 +56,8 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::resource('galeries', GalerieController::class)->parameters([
         'galeries' => 'galerie',
     ]);
+    Route::get('projections/{projection}/visionner', [ProjectionController::class, 'visionner'])->name('projections.visionner');
+    Route::get('projections/{projection}/etat', [ProjectionController::class, 'projectionStatus'])->name('projections.status');
     Route::post('projections/{projection}/demarrer', [ProjectionController::class, 'demarrer'])->name('projections.demarrer');
     Route::post('projections/{projection}/arreter',  [ProjectionController::class, 'arreter'])->name('projections.arreter');
     

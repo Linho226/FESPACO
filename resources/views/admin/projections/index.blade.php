@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="container">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2 mobile-page-header">
         <h2>Programme des projections</h2>
         <a href="{{ route('admin.projections.create') }}" class="btn btn-success">
             + Ajouter une projection
@@ -15,6 +15,13 @@
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
+    @if(session('warning'))
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            {{ session('warning') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
@@ -50,6 +57,11 @@
                                 @if($dureeSecondes > 0)
                                     — durée {{ $dureeLabel }} — fin prévue {{ $finPrevue }}
                                 @endif
+                            </div>
+                            <div class="mt-2">
+                                <a href="{{ route('admin.projections.visionner', $alerte) }}" class="btn btn-sm btn-outline-success">
+                                    Visualiser
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -99,7 +111,7 @@
             <input type="date" name="date" class="form-control"
                 value="{{ request('date') }}">
         </div>
-        <div class="col-md-3 d-flex gap-2">
+        <div class="col-md-3 d-flex gap-2 mobile-filter-actions">
             <button class="btn btn-primary w-100" type="submit">Filtrer</button>
             <a href="{{ route('admin.projections.index') }}" class="btn btn-secondary w-100">Réinit.</a>
         </div>
@@ -163,7 +175,7 @@
                             <span class="badge bg-secondary">Non publié</span>
                         @endif
                     </td>
-                    <td class="d-flex flex-wrap gap-1">
+                    <td class="d-flex flex-wrap gap-1 mobile-table-actions">
                         @if($projection->estAVenir() || $projection->estArreteeManuellement())
                             <form action="{{ route('admin.projections.demarrer', $projection) }}" method="POST" style="display:inline-block">
                                 @csrf
@@ -174,6 +186,9 @@
                         @endif
 
                         @if($projection->estEnCours())
+                            <a href="{{ route('admin.projections.visionner', $projection) }}"
+                               class="btn btn-sm btn-info text-white">Visualiser</a>
+
                             <form action="{{ route('admin.projections.arreter', $projection) }}" method="POST" style="display:inline-block">
                                 @csrf
                                 <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Mettre cette projection en pause ?')">⏸ Pause</button>

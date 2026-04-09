@@ -386,6 +386,67 @@
                 background: linear-gradient(135deg, var(--sidebar-accent-soft), rgba(255,255,255,.08));
             }
         }
+        @media (max-width: 767.98px) {
+            .admin-main {
+                padding: .75rem;
+            }
+            .admin-main .container,
+            .admin-main .container-fluid {
+                padding-left: .9rem;
+                padding-right: .9rem;
+            }
+            .admin-main h1 {
+                font-size: 1.8rem;
+            }
+            .admin-main h2 {
+                font-size: 1.9rem;
+            }
+            .admin-main .btn {
+                white-space: normal;
+            }
+            .admin-main .table-responsive {
+                max-height: none;
+                -webkit-overflow-scrolling: touch;
+            }
+            .admin-main .mobile-page-header {
+                align-items: stretch !important;
+            }
+            .admin-main .mobile-page-header > * {
+                width: 100%;
+            }
+            .admin-main .mobile-actions-stack {
+                width: 100%;
+                justify-content: stretch !important;
+            }
+            .admin-main .mobile-actions-stack > * {
+                flex: 1 1 100%;
+            }
+            .admin-main .mobile-actions-stack .btn,
+            .admin-main .mobile-actions-stack form,
+            .admin-main .mobile-actions-stack form .btn {
+                width: 100%;
+            }
+            .admin-main .mobile-filter-actions {
+                flex-direction: column;
+            }
+            .admin-main .mobile-filter-actions > * {
+                width: 100%;
+            }
+            .admin-main .mobile-table-actions {
+                min-width: 180px;
+            }
+            .admin-main .mobile-table-actions .d-inline-flex,
+            .admin-main .mobile-table-actions.d-flex {
+                width: 100%;
+                justify-content: stretch !important;
+            }
+            .admin-main .mobile-table-actions .btn,
+            .admin-main .mobile-table-actions form,
+            .admin-main .mobile-table-actions form .btn,
+            .admin-main .mobile-table-actions a {
+                width: 100%;
+            }
+        }
         @media (prefers-reduced-motion: reduce) {
             * {
                 animation: none !important;

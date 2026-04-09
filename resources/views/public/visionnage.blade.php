@@ -8,10 +8,12 @@
     <link href="/css/public/visionnage.css" rel="stylesheet">
 </head>
 <body>
+@if($showPublicChrome ?? true)
 @include('public.navbar')
+@endif
 
 <div class="container py-4 py-md-5">
-    <a href="{{ route('public.projections') }}" class="back-link">
+    <a href="{{ $backUrl ?? route('public.projections') }}" class="back-link">
         ← Retour aux projections
     </a>
 
@@ -118,7 +120,9 @@
     </div>
 </div>
 
+@if($showPublicChrome ?? true)
 @include('public.footer')
+@endif
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
@@ -158,10 +162,10 @@
         }
     });
 
-    const statusUrl = @json(route('public.projections.status', $projection));
-    const projectionsUrl = @json(route('public.projections'));
-    const finishedProjectionUrl = @json(route('public.projections.finished', $projection));
-    const projectionWatchUrl = @json(route('public.projections.visionner', $projection));
+    const statusUrl = @json($statusUrl ?? route('public.projections.status', $projection));
+    const projectionsUrl = @json($backUrl ?? route('public.projections'));
+    const finishedProjectionUrl = @json($finishedProjectionUrl ?? route('public.projections.finished', $projection));
+    const projectionWatchUrl = @json($projectionWatchUrl ?? route('public.projections.visionner', $projection));
     const projectionTitle = @json($projection->getTitreAffiche());
     const projectionId = Number(@json($projection->id));
     const projectionResumeNoticeStorageKey = 'fespaco_projection_resume_notice';
@@ -315,7 +319,7 @@
 
             if (countdown <= 0) {
                 clearInterval(nextVideoCountdown);
-                const nextUrl = new URL(@json(route('public.projections.visionner', ['projection' => $projection->id])), window.location.origin);
+                const nextUrl = new URL(projectionWatchUrl, window.location.origin);
                 nextUrl.searchParams.set('autonext', '1');
                 nextUrl.searchParams.set('from_media', String(activeMediaId || '0'));
                 window.location.href = nextUrl.toString();
@@ -451,6 +455,7 @@
         }
     }
 
+    refreshProjectionStatus();
     window.projectionStatusInterval = setInterval(refreshProjectionStatus, 10000);
 </script>
 </body>
