@@ -114,7 +114,17 @@
                         @else
                             <span class="small gallery-media-link">Festival général</span>
                         @endif
-                        <p class="small mt-1 mb-2 gallery-media-date">{{ $media->date }}</p>
+                        <p class="small mt-1 mb-2 gallery-media-date">
+                            {{ optional($media->date)->format('Y-m-d') }}
+                            @if($media->type_media === 'video')
+                                <span class="ms-2">
+                                    ⏱
+                                    {{ $media->duree_secondes
+                                        ? \App\Models\Film::formatterDureeSecondes((int) $media->duree_secondes)
+                                        : 'Durée non renseignée' }}
+                                </span>
+                            @endif
+                        </p>
 
                         @if(($media->type_media === 'video' && $media->fichier) || $media->lien)
                             <a href="{{ route('admin.galeries.play', ['galerie' => $media->id]) }}" class="btn btn-sm btn-outline-primary w-100 mb-2">
